@@ -1500,7 +1500,18 @@ async function load(){
     console.log('[Firebase load] ← '+path);
     const snap = await db.ref(path).once('value');
     console.log('[Firebase load] OK (données existantes : '+snap.exists()+')');
-    return applyShape(snap.val());
+    const data = snap.val();
+    // Force conversion Firebase object → array pour tasks ET revenues de tous les secteurs
+    if(data && data.sectors && typeof data.sectors==='object'){
+      Object.keys(data.sectors).forEach(sid=>{
+        const sec = data.sectors[sid];
+        if(sec && typeof sec==='object'){
+          if(sec.tasks && !Array.isArray(sec.tasks)) sec.tasks = Object.values(sec.tasks);
+          if(sec.revenues && !Array.isArray(sec.revenues)) sec.revenues = Object.values(sec.revenues);
+        }
+      });
+    }
+    return applyShape(data);
   }catch(e){
     console.error('[Firebase load] ÉCHEC ← '+path, e);
     alert('Lecture Firebase échouée : '+(e.message||e.code||e)+'\n\nVérifie que la Realtime Database est activée et que les règles autorisent l\'accès à users/{uid}.');
@@ -1524,12 +1535,44 @@ function save(){
       console.warn('[Firebase save] Utilisateur changé entre temps — écriture annulée.');
       return;
     }
-    const path = 'users/'+uid;
-    console.log('[Firebase save] → '+path);
-    db.ref(path).set(state)
-      .then(()=>console.log('[Firebase save] OK → '+path))
+    const basePath = 'users/'+uid;
+    // Multi-path update : on cible UNIQUEMENT les champs modifiés côté UI,
+    // jamais les collections tasks/revenues en bloc. Chaque task/revenue
+    // est écrit à son propre path {id}, ce qui merge avec Firebase sans
+    // écraser les autres items éventuellement présents.
+    const updates = {};
+    updates[basePath+'/caTarget']       = state.caTarget;
+    updates[basePath+'/caNow']          = state.caNow;
+    updates[basePath+'/activeMission']  = state.activeMission || null;
+    updates[basePath+'/stats']          = state.stats         || {};
+    updates[basePath+'/streak']         = state.streak        || {};
+    updates[basePath+'/ritualHistory']  = state.ritualHistory || {};
+    updates[basePath+'/dailyLog']       = state.dailyLog      || {};
+    updates[basePath+'/weeklyReviews']  = state.weeklyReviews || {};
+    if(state._dataInjected!==undefined) updates[basePath+'/_dataInjected'] = state._dataInjected;
+
+    SECTORS.forEach(s=>{
+      const sd = state.sectors && state.sectors[s.id];
+      if(!sd) return;
+      const sPath = basePath+'/sectors/'+s.id;
+      // Champs non-array du secteur
+      updates[sPath+'/streams']      = (sd.streams===undefined? null : sd.streams);
+      updates[sPath+'/missionsDone'] = sd.missionsDone || 0;
+      // Tasks : un path par ID → merge, jamais d'écrasement de la collection
+      (sd.tasks||[]).forEach(t=>{
+        if(t && t.id) updates[sPath+'/tasks/'+t.id] = t;
+      });
+      // Revenues : un path par ID → merge, jamais d'écrasement de la collection
+      (sd.revenues||[]).forEach(r=>{
+        if(r && r.id) updates[sPath+'/revenues/'+r.id] = r;
+      });
+    });
+
+    console.log('[Firebase save] update → '+basePath, Object.keys(updates).length+' paths');
+    db.ref().update(updates)
+      .then(()=>console.log('[Firebase save] OK → '+basePath))
       .catch(e=>{
-        console.error('[Firebase save] ÉCHEC → '+path, e);
+        console.error('[Firebase save] ÉCHEC → '+basePath, e);
         alert('Sauvegarde Firebase échouée : '+(e.message||e.code||e)+'\n\nVérifie que la Realtime Database est activée et que les règles autorisent l\'écriture sur users/{uid}.');
       });
   }, 250);
