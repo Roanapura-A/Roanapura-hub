@@ -3395,6 +3395,25 @@ async function deleteTaskWithCalendar(sectorId, taskId){
   save();
 }
 
+// --------- Google Sign In ---------
+function signInWithGoogle(){
+  if(!googleAuthProvider){
+    initGoogleAuth();
+  }
+  if(typeof firebase !== 'undefined' && firebase.auth && googleAuthProvider){
+    firebase.auth().signInWithPopup(googleAuthProvider).catch(e=>{
+      console.warn('signin failed', e);
+      alert('Connexion échouée : '+(e.message||e.code||e));
+    });
+  }
+}
+
+function signOut(){
+  if(typeof firebase !== 'undefined' && firebase.auth){
+    firebase.auth().signOut();
+  }
+}
+
 // --------- Initialize on startup ---------
 initGoogleAuth();
 
