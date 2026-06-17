@@ -1080,7 +1080,7 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
    PLANNING VIEW
    ============================================================ */
 .planning-slot{
-  background:linear-gradient(180deg, var(--surface), var(--bg-2));
+  background:var(--surface);
   border:1px solid var(--border);border-left:2px solid var(--amber-bright);
   padding:20px;border-radius:2px;margin-bottom:16px;
 }
@@ -1106,7 +1106,7 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .planning-task-launch:hover{background:var(--red-bright)}
 
 .planning-unscheduled{
-  background:linear-gradient(180deg, var(--surface), var(--bg-2));
+  background:var(--surface);
   border:1px dashed var(--border);border-left:2px solid var(--text-3);
   padding:20px;border-radius:2px;margin-bottom:16px;
 }
@@ -1221,8 +1221,8 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 
     <!-- Bilan button + Planning button -->
     <div style="margin-bottom:28px;display:flex;gap:10px">
-      <button class="btn" onclick="openWeeklyReview()" style="background:rgba(212,146,58,.1);border:1px solid var(--amber-bright);color:var(--amber-bright)">📊 BILAN HEBDOMADAIRE</button>
-      <button class="btn" onclick="go('planning')" style="background:rgba(78,163,107,.1);border:1px solid var(--ok);color:var(--ok)">📅 PLANNING</button>
+      <button class="btn" onclick="openWeeklyReview()" style="background:var(--surface);border:1px solid var(--border);color:var(--amber-bright)">📊 BILAN HEBDOMADAIRE</button>
+      <button class="btn" onclick="go('planning')" style="background:var(--surface);border:1px solid var(--border);color:var(--ok)">📅 PLANNING</button>
     </div>
 
     <!-- Global mission / streak panel -->
