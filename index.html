@@ -870,6 +870,20 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 }
 .revenue-item .rev-delete:hover{border-color:var(--red);color:var(--red-bright)}
 
+.revenue-accordion-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;padding:12px 14px;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:2px;font-family:var(--font-display);font-weight:600;font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--text-2);cursor:pointer;transition:all .2s;
+  margin-bottom:14px;
+}
+.revenue-accordion-btn:hover{background:var(--surface-3);border-color:var(--border-glow)}
+.revenue-accordion-btn.open{border-color:var(--amber-bright);color:var(--amber-bright)}
+.revenue-accordion-arrow{transition:transform .3s ease;display:inline-block}
+.revenue-accordion-btn.open .revenue-accordion-arrow{transform:rotate(180deg)}
+
 /* ============================================================
    WEEKLY REVIEW
    ============================================================ */
@@ -1048,6 +1062,20 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 }
 .signout-btn:hover{border-color:var(--red);color:var(--red-bright)}
 
+.revenue-accordion-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;padding:12px 14px;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:2px;font-family:var(--font-display);font-weight:600;font-size:12px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--text-2);cursor:pointer;transition:all .2s;
+  margin-bottom:14px;
+}
+.revenue-accordion-btn:hover{background:var(--surface-3);border-color:var(--border-glow)}
+.revenue-accordion-btn.open{border-color:var(--amber-bright);color:var(--amber-bright)}
+.revenue-accordion-arrow{transition:transform .3s ease;display:inline-block}
+.revenue-accordion-btn.open .revenue-accordion-arrow{transform:rotate(180deg)}
+
 </style>
 </head>
 <body>
@@ -1187,7 +1215,11 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
     <div class="section-title">Revenus Encaissés <span class="count mono" id="s-rev-total">0€</span></div>
     <div class="revenue-wrap">
       <button class="btn amber" onclick="openRevenueModal()">+ NOUVEAU REVENU</button>
-      <div class="revenue-list" id="revenue-list"></div>
+      <button class="revenue-accordion-btn" id="revenue-accordion-btn" onclick="toggleRevenueAccordion()">
+        <span id="revenue-accordion-label">Afficher revenus</span>
+        <span id="revenue-accordion-arrow">▼</span>
+      </button>
+      <div class="revenue-list" id="revenue-list" style="display:none"></div>
     </div>
 
     <!-- Add task -->
@@ -2640,6 +2672,35 @@ function viewWeeklyDetail(key){
   alert(`Bilan semaine ${key}:\n\nBien passé:\n${review.good||'—'}\n\nMal passé:\n${review.bad||'—'}\n\nPourquoi:\n${review.why||'—'}`);
 }
 
+// --------- Revenue Accordion ---------
+function toggleRevenueAccordion(){
+  const list = document.getElementById('revenue-list');
+  const btn = document.getElementById('revenue-accordion-btn');
+  if(!list || !btn) return;
+  const isOpen = list.style.display !== 'none';
+  list.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('open');
+}
+
+function updateRevenueAccordion(){
+  const sd = state.sectors[currentSector];
+  const revs = (sd.revenues||[]);
+  const total = revs.reduce((s,r)=>s+(r.amount||0), 0);
+  const count = revs.length;
+  const label = document.getElementById('revenue-accordion-label');
+  if(label){
+    label.textContent = count > 0
+      ? `${total.toLocaleString('fr-FR')}€ (${count} ${count>1?'entrées':'entrée'})`
+      : 'Aucun revenu';
+  }
+  const btn = document.getElementById('revenue-accordion-btn');
+  if(btn) btn.style.display = count > 0 ? 'flex' : 'none';
+  // Fermer l'accordéon
+  const list = document.getElementById('revenue-list');
+  if(list) list.style.display = 'none';
+  if(btn) btn.classList.remove('open');
+}
+
 // --------- One-shot localStorage → Firebase injection ---------
 async function injectLocalData(){
   if(!currentUser){
@@ -2701,6 +2762,35 @@ auth.onAuthStateChanged(async (user) => {
     if(overlay) overlay.classList.add('open');
   }
 });
+
+// --------- Revenue Accordion ---------
+function toggleRevenueAccordion(){
+  const list = document.getElementById('revenue-list');
+  const btn = document.getElementById('revenue-accordion-btn');
+  if(!list || !btn) return;
+  const isOpen = list.style.display !== 'none';
+  list.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('open');
+}
+
+function updateRevenueAccordion(){
+  const sd = state.sectors[currentSector];
+  const revs = (sd.revenues||[]);
+  const total = revs.reduce((s,r)=>s+(r.amount||0), 0);
+  const count = revs.length;
+  const label = document.getElementById('revenue-accordion-label');
+  if(label){
+    label.textContent = count > 0
+      ? `${total.toLocaleString('fr-FR')}€ (${count} ${count>1?'entrées':'entrée'})`
+      : 'Aucun revenu';
+  }
+  const btn = document.getElementById('revenue-accordion-btn');
+  if(btn) btn.style.display = count > 0 ? 'flex' : 'none';
+  // Fermer l'accordéon
+  const list = document.getElementById('revenue-list');
+  if(list) list.style.display = 'none';
+  if(btn) btn.classList.remove('open');
+}
 
 </script>
 </body>
