@@ -1572,7 +1572,7 @@ function defaultState(){
     state.sectors[s.id]={
       tasks: s.seed.map((t,i)=>({
         id:'t_'+s.id+'_'+i+'_'+Math.random().toString(36).slice(2,7),
-        name:t.name, q:t.q, recur:!!t.recur, done:false, createdAt:Date.now(), startTime:null, duration:null
+        name:t.name, q:t.q, recur:!!t.recur, done:false, createdAt:Date.now(), startTime:null, duration:null, calendarEventId:null
       })),
       streams: s.streams ? JSON.parse(JSON.stringify(s.streams)) : null,
       revenues: [],
@@ -3013,11 +3013,18 @@ function setTaskTime(sectorId, taskId){
     `,
     actions:[
       {label:'Annuler', cls:'ghost', onclick:closeModal},
-      {label:'Confirmer', cls:'primary', onclick:()=>{
+      {label:'Confirmer', cls:'primary', onclick:async()=>{
         const startTime = document.getElementById('task-start-time').value || null;
         const duration = parseInt(document.getElementById('task-duration').value)||null;
         task.startTime = startTime;
         task.duration = duration;
+        if(startTime && googleUser){
+          if(task.calendarEventId){
+            await calendarUpdateEvent(task);
+          } else {
+            await calendarCreateEvent(task);
+          }
+        }
         save();
         closeModal();
         renderPlanning();
@@ -3250,6 +3257,150 @@ function todayStr(){
 function save(){
   try{ localStorage.setItem('roanapura.v1', JSON.stringify(state)); }
   catch(e){ console.warn('save failed',e); }
+}
+
+// --------- Google Calendar Integration ---------
+let googleAuthProvider = null;
+let googleUser = null;
+
+function initGoogleAuth(){
+  if(typeof firebase !== 'undefined' && firebase.auth){
+    googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+    googleAuthProvider.addScope('https://www.googleapis.com/auth/calendar.events');
+  }
+}
+
+async function calendarCreateEvent(task){
+  if(!googleUser || !task.startTime || !task.plannedFor) return null;
+  try{
+    const token = await googleUser.getIdToken();
+    const today = todayStr();
+    const eventDate = task.plannedFor || today;
+    const [hours, minutes] = task.startTime.split(':');
+    const startTime = new Date(eventDate.split('-')[0], parseInt(eventDate.split('-')[1])-1, parseInt(eventDate.split('-')[2]), parseInt(hours), parseInt(minutes));
+    const endTime = new Date(startTime.getTime() + (task.duration||30)*60000);
+
+    const event = {
+      summary: task.name,
+      description: `Secteur: ${getSectorMeta(task.sectorId)?.name||'—'} | Q${task.q}`,
+      start: {
+        dateTime: startTime.toISOString(),
+        timeZone: 'Europe/Paris'
+      },
+      end: {
+        dateTime: endTime.toISOString(),
+        timeZone: 'Europe/Paris'
+      }
+    };
+
+    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event)
+    });
+
+    if(response.ok){
+      const data = await response.json();
+      task.calendarEventId = data.id;
+      save();
+      return data.id;
+    }
+  }catch(e){
+    console.warn('Calendar create failed', e);
+  }
+  return null;
+}
+
+async function calendarUpdateEvent(task){
+  if(!googleUser || !task.calendarEventId || !task.startTime) return false;
+  try{
+    const token = await googleUser.getIdToken();
+    const eventDate = task.plannedFor || todayStr();
+    const [hours, minutes] = task.startTime.split(':');
+    const startTime = new Date(eventDate.split('-')[0], parseInt(eventDate.split('-')[1])-1, parseInt(eventDate.split('-')[2]), parseInt(hours), parseInt(minutes));
+    const endTime = new Date(startTime.getTime() + (task.duration||30)*60000);
+
+    const event = {
+      summary: task.name,
+      description: `Secteur: ${getSectorMeta(task.sectorId)?.name||'—'} | Q${task.q}`,
+      start: {
+        dateTime: startTime.toISOString(),
+        timeZone: 'Europe/Paris'
+      },
+      end: {
+        dateTime: endTime.toISOString(),
+        timeZone: 'Europe/Paris'
+      }
+    };
+
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.calendarEventId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event)
+    });
+
+    return response.ok;
+  }catch(e){
+    console.warn('Calendar update failed', e);
+  }
+  return false;
+}
+
+async function calendarDeleteEvent(task){
+  if(!googleUser || !task.calendarEventId) return false;
+  try{
+    const token = await googleUser.getIdToken();
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.calendarEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if(response.ok){
+      task.calendarEventId = null;
+      save();
+    }
+    return response.ok;
+  }catch(e){
+    console.warn('Calendar delete failed', e);
+  }
+  return false;
+}
+
+function getSectorMeta(id){
+  return SECTORS.find(s=>s.id===id);
+}
+
+async function deleteTaskWithCalendar(sectorId, taskId){
+  const task = findTask(sectorId, taskId);
+  if(!task) return;
+  if(task.calendarEventId && googleUser){
+    await calendarDeleteEvent(task);
+  }
+  state.sectors[sectorId].tasks = state.sectors[sectorId].tasks.filter(t=>t.id!==taskId);
+  save();
+}
+
+// --------- Initialize on startup ---------
+initGoogleAuth();
+
+if(typeof firebase !== 'undefined' && firebase.auth){
+  firebase.auth().onAuthStateChanged((user) => {
+    googleUser = user;
+    if(user){
+      console.log('Google user connected:', user.email);
+    } else {
+      googleUser = null;
+    }
+  });
 }
 
 </script>
