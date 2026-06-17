@@ -702,7 +702,7 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
    ============================================================ */
 .ritual-banner{
   margin-top:32px;
-  background: linear-gradient(135deg, rgba(212,146,58,.10), rgba(192,57,43,.04));
+  background: var(--surface);
   border:1px solid var(--border);
   border-left:2px solid var(--amber);
   padding:22px 26px;border-radius:2px;
@@ -1087,11 +1087,12 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .planning-slot-time{
   font-family:var(--font-mono);font-size:13px;color:var(--amber-bright);
   font-weight:600;letter-spacing:2px;margin-bottom:12px;
+  background:var(--surface-2);padding:8px 12px;border-radius:2px;display:inline-block;
 }
 .planning-tasks{display:flex;flex-direction:column;gap:8px}
 .planning-task{
   display:flex;align-items:center;gap:12px;
-  padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);
+  padding:10px 12px;background:var(--surface);border:1px solid var(--border);
   border-radius:2px;transition:all .2s;cursor:pointer;
 }
 .planning-task:hover{border-color:var(--border-glow);background:var(--surface-3)}
@@ -1113,6 +1114,7 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .planning-unscheduled-title{
   font-family:var(--font-display);font-weight:600;font-size:13px;
   letter-spacing:2px;color:var(--text-3);text-transform:uppercase;margin-bottom:12px;
+  background:var(--surface-2);padding:8px 12px;border-radius:2px;display:inline-block;
 }
 
 .time-input-group{
