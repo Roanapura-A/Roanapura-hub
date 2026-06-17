@@ -3308,7 +3308,11 @@ async function calendarCreateEvent(task){
       const data = await response.json();
       task.calendarEventId = data.id;
       save();
+      console.log('Calendar event created:', data.id);
       return data.id;
+    } else {
+      const error = await response.json();
+      console.error('Calendar API error:', response.status, error.error?.message || error);
     }
   }catch(e){
     console.warn('Calendar create failed', e);
