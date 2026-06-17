@@ -1076,6 +1076,71 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .revenue-accordion-arrow{transition:transform .3s ease;display:inline-block}
 .revenue-accordion-btn.open .revenue-accordion-arrow{transform:rotate(180deg)}
 
+/* ============================================================
+   PLANNING VIEW
+   ============================================================ */
+.planning-slot{
+  background:linear-gradient(180deg, var(--surface), var(--bg-2));
+  border:1px solid var(--border);border-left:2px solid var(--amber-bright);
+  padding:20px;border-radius:2px;margin-bottom:16px;
+}
+.planning-slot-time{
+  font-family:var(--font-mono);font-size:13px;color:var(--amber-bright);
+  font-weight:600;letter-spacing:2px;margin-bottom:12px;
+}
+.planning-tasks{display:flex;flex-direction:column;gap:8px}
+.planning-task{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:2px;transition:all .2s;cursor:pointer;
+}
+.planning-task:hover{border-color:var(--border-glow);background:var(--surface-3)}
+.planning-task-meta{flex:1;min-width:0}
+.planning-task-name{font-size:13px;color:var(--text);margin-bottom:2px;line-height:1.2}
+.planning-task-info{display:flex;gap:10px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:1px}
+.planning-task-launch{
+  padding:6px 10px;background:var(--red);color:#fff;border:none;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:1px;
+  border-radius:2px;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.planning-task-launch:hover{background:var(--red-bright)}
+
+.planning-unscheduled{
+  background:linear-gradient(180deg, var(--surface), var(--bg-2));
+  border:1px dashed var(--border);border-left:2px solid var(--text-3);
+  padding:20px;border-radius:2px;margin-bottom:16px;
+}
+.planning-unscheduled-title{
+  font-family:var(--font-display);font-weight:600;font-size:13px;
+  letter-spacing:2px;color:var(--text-3);text-transform:uppercase;margin-bottom:12px;
+}
+
+.time-input-group{
+  display:flex;gap:10px;align-items:flex-end;margin-bottom:10px;
+}
+.time-input-field{
+  display:flex;flex-direction:column;gap:4px;flex:1;
+}
+.time-input-field label{
+  font-family:var(--font-mono);font-size:9px;color:var(--text-3);
+  letter-spacing:2px;text-transform:uppercase;
+}
+.time-input-field input{
+  padding:8px;background:var(--surface-3);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font-mono);font-size:12px;border-radius:2px;
+}
+.duration-quick-select{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;
+}
+.duration-btn{
+  padding:5px 10px;background:var(--surface-3);border:1px solid var(--border);
+  color:var(--text-2);font-family:var(--font-mono);font-size:10px;
+  cursor:pointer;transition:all .2s;border-radius:2px;
+}
+.duration-btn:hover,.duration-btn.active{
+  background:var(--amber-bright);color:#0a0a0f;border-color:var(--amber-bright);
+}
+
 </style>
 </head>
 <body>
@@ -1154,9 +1219,10 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
     <!-- Weekly review card -->
     <div class="weekly-card" id="weekly-card-home" onclick="openWeeklyReview()" style="display:none"></div>
 
-    <!-- Bilan button -->
-    <div style="margin-bottom:28px">
+    <!-- Bilan button + Planning button -->
+    <div style="margin-bottom:28px;display:flex;gap:10px">
       <button class="btn" onclick="openWeeklyReview()" style="background:rgba(212,146,58,.1);border:1px solid var(--amber-bright);color:var(--amber-bright)">📊 BILAN HEBDOMADAIRE</button>
+      <button class="btn" onclick="go('planning')" style="background:rgba(78,163,107,.1);border:1px solid var(--ok);color:var(--ok)">📅 PLANNING</button>
     </div>
 
     <!-- Global mission / streak panel -->
@@ -1232,6 +1298,8 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
         <option value="3">Q3 — À déléguer</option>
         <option value="4">Q4 — À éliminer</option>
       </select>
+      <input id="new-task-time" type="time" placeholder="HH:MM" style="font-family:var(--font-mono);font-size:11px;padding:8px 10px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:1px;max-width:100px" title="Heure (optionnel)" />
+      <input id="new-task-duration" type="number" min="0" step="15" placeholder="min" style="font-family:var(--font-mono);font-size:11px;padding:8px 10px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:1px;max-width:70px" title="Durée en minutes (optionnel)" />
       <button class="recur-toggle" id="new-task-recur" type="button">⟳ Récurrent</button>
       <button class="add" onclick="addTask()">+ AJOUTER</button>
     </div>
@@ -1288,14 +1356,31 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
     <div class="ritual-stepper" id="ritual-stepper">
       <div class="step" data-step="1" data-num="01" onclick="ritualGoStep(1)">Review du jour</div>
       <div class="step" data-step="2" data-num="02" onclick="ritualGoStep(2)">Préparer demain</div>
-      <div class="step" data-step="3" data-num="03" onclick="ritualGoStep(3)">Valider</div>
+      <div class="step" data-step="3" data-num="03" onclick="ritualGoStep(3)">Planifier demain</div>
+      <div class="step" data-step="4" data-num="04" onclick="ritualGoStep(4)">Valider</div>
     </div>
 
     <div class="ritual-step" id="ritual-step-1"></div>
     <div class="ritual-step" id="ritual-step-2" style="display:none"></div>
     <div class="ritual-step" id="ritual-step-3" style="display:none"></div>
+    <div class="ritual-step" id="ritual-step-4" style="display:none"></div>
 
     <div class="footer">// RITUEL DU SOIR // STREAK CONDITIONNÉ À LA VALIDATION</div>
+  </section>
+
+  <!-- ============== PLANNING VIEW ============== -->
+  <section class="view" id="view-planning">
+    <div class="back-bar">
+      <button class="back-btn" onclick="go('home')">← QG</button>
+      <div class="sector-title-bar">
+        <span class="id mono">// PLANNING_DU_JOUR</span>
+        <span class="name"><span class="accent">//</span> AUJOURD'HUI</span>
+      </div>
+    </div>
+
+    <div id="planning-content"></div>
+
+    <div class="footer">// PLANNING // GLISSEZ-DÉPOSEZ POUR RÉORGANISER</div>
   </section>
 
 </main>
@@ -1487,7 +1572,7 @@ function defaultState(){
     state.sectors[s.id]={
       tasks: s.seed.map((t,i)=>({
         id:'t_'+s.id+'_'+i+'_'+Math.random().toString(36).slice(2,7),
-        name:t.name, q:t.q, recur:!!t.recur, done:false, createdAt:Date.now()
+        name:t.name, q:t.q, recur:!!t.recur, done:false, createdAt:Date.now(), startTime:null, duration:null
       })),
       streams: s.streams ? JSON.parse(JSON.stringify(s.streams)) : null,
       revenues: [],
@@ -2790,6 +2875,381 @@ function updateRevenueAccordion(){
   const list = document.getElementById('revenue-list');
   if(list) list.style.display = 'none';
   if(btn) btn.classList.remove('open');
+}
+
+// --------- Routing ---------
+function go(view, sectorId=null){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  if(view==='home'){
+    document.getElementById('view-home').classList.add('active');
+    renderHome();
+  } else if(view==='sector'){
+    currentSector = sectorId;
+    document.getElementById('view-sector').classList.add('active');
+  } else if(view==='ritual'){
+    document.getElementById('view-ritual').classList.add('active');
+    ritualGoStep(1);
+  } else if(view==='planning'){
+    document.getElementById('view-planning').classList.add('active');
+    renderPlanning();
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// --------- Planning ---------
+function getTodayTasks(){
+  const today = todayStr();
+  const allTasks = [];
+  SECTORS.forEach(s=>{
+    state.sectors[s.id].tasks.forEach(t=>{
+      allTasks.push(Object.assign({}, t, {sectorId:s.id, sectorMeta:s}));
+    });
+  });
+  return allTasks.filter(t=>t.plannedFor===today && !t.done);
+}
+
+function renderPlanning(){
+  const tasks = getTodayTasks().sort((a,b)=>{
+    if(!a.startTime && !b.startTime) return 0;
+    if(!a.startTime) return 1;
+    if(!b.startTime) return -1;
+    return a.startTime.localeCompare(b.startTime);
+  });
+
+  const scheduled = tasks.filter(t=>t.startTime);
+  const unscheduled = tasks.filter(t=>!t.startTime);
+
+  const content = document.getElementById('planning-content');
+  if(!content) return;
+
+  let html = '';
+
+  if(scheduled.length){
+    const grouped = {};
+    scheduled.forEach(t=>{
+      if(!grouped[t.startTime]) grouped[t.startTime] = [];
+      grouped[t.startTime].push(t);
+    });
+
+    Object.keys(grouped).sort().forEach(time=>{
+      html += `<div class="planning-slot">
+        <div class="planning-slot-time">${time}</div>
+        <div class="planning-tasks">
+          ${grouped[time].map(t=>`
+            <div class="planning-task">
+              <div class="planning-task-meta">
+                <div class="planning-task-name">${escapeHtml(t.name)}</div>
+                <div class="planning-task-info">
+                  <span>//${t.sectorMeta.tag}</span>
+                  ${t.duration?'<span>'+t.duration+'min</span>':''}
+                </div>
+              </div>
+              ${!state.activeMission || state.activeMission.taskId !== t.id
+                ? `<button class="planning-task-launch" onclick="launchMission('${t.id}')">▸ LANCER</button>`
+                : `<span style="color:var(--red-bright);font-family:var(--font-mono);font-size:10px;">EN COURS</span>`
+              }
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    });
+  }
+
+  if(unscheduled.length){
+    html += `<div class="planning-unscheduled">
+      <div class="planning-unscheduled-title">Non planifiées</div>
+      <div class="planning-tasks">
+        ${unscheduled.map(t=>`
+          <div class="planning-task">
+            <div class="planning-task-meta">
+              <div class="planning-task-name">${escapeHtml(t.name)}</div>
+              <div class="planning-task-info">
+                <span>//${t.sectorMeta.tag}</span>
+              </div>
+            </div>
+            ${!state.activeMission || state.activeMission.taskId !== t.id
+              ? `<button class="planning-task-launch" onclick="launchMission('${t.id}')">▸ LANCER</button>`
+              : `<span style="color:var(--red-bright);font-family:var(--font-mono);font-size:10px;">EN COURS</span>`
+            }
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  if(!scheduled.length && !unscheduled.length){
+    html = '<div class="empty" style="margin:40px 0;text-align:center">Aucune tâche prévue pour aujourd\'hui.</div>';
+  }
+
+  content.innerHTML = html;
+}
+
+function setTaskTime(sectorId, taskId){
+  const task = findTask(sectorId, taskId);
+  if(!task) return;
+
+  openModal({
+    tag:'// PLANNING',
+    title:'Assigner un créneau',
+    body:`
+      <div class="time-input-group">
+        <div class="time-input-field" style="flex:1">
+          <label>Heure de début</label>
+          <input type="time" id="task-start-time" value="${task.startTime||''}" />
+        </div>
+        <div class="time-input-field" style="flex:1">
+          <label>Durée (min)</label>
+          <input type="number" id="task-duration" min="0" step="15" value="${task.duration||''}" placeholder="0" />
+        </div>
+      </div>
+      <div class="duration-quick-select">
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='15';document.getElementById('task-duration').dispatchEvent(new Event('change'))">15</button>
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='30';document.getElementById('task-duration').dispatchEvent(new Event('change'))">30</button>
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='45';document.getElementById('task-duration').dispatchEvent(new Event('change'))">45</button>
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='60';document.getElementById('task-duration').dispatchEvent(new Event('change'))">60</button>
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='90';document.getElementById('task-duration').dispatchEvent(new Event('change'))">90</button>
+        <button class="duration-btn" onclick="document.getElementById('task-duration').value='120';document.getElementById('task-duration').dispatchEvent(new Event('change'))">120</button>
+      </div>
+    `,
+    actions:[
+      {label:'Annuler', cls:'ghost', onclick:closeModal},
+      {label:'Confirmer', cls:'primary', onclick:()=>{
+        const startTime = document.getElementById('task-start-time').value || null;
+        const duration = parseInt(document.getElementById('task-duration').value)||null;
+        task.startTime = startTime;
+        task.duration = duration;
+        save();
+        closeModal();
+        renderPlanning();
+      }}
+    ]
+  });
+}
+
+// --------- Ritual Steps Management ---------
+function ritualGoStep(n){
+  document.querySelectorAll('#view-ritual .ritual-step').forEach((el,i)=>{
+    el.style.display = (i+1===n)?'block':'none';
+  });
+  document.querySelectorAll('#view-ritual .ritual-stepper .step').forEach((el,i)=>{
+    el.classList.toggle('active', (i+1)===n);
+    el.classList.toggle('done', (i+1)<n);
+  });
+  if(n===1) renderRitualStep1();
+  if(n===2) renderRitualStep2();
+  if(n===3) renderRitualStep3();
+  if(n===4) renderRitualStep4();
+}
+
+function renderRitualStep1(){
+  const log = todayLog();
+  const cm = log.completedMissions||[];
+  const am = log.abortedMissions||[];
+  const td = log.tasksDone||0;
+  const el = document.getElementById('ritual-step-1');
+  el.innerHTML = `
+    <div class="panel-title">// Étape 1 — Review du jour</div>
+    <div class="ritual-stats">
+      <div class="ritual-stat">
+        <div class="ritual-stat-label">Missions complétées</div>
+        <div class="ritual-stat-value ok">${cm.length}</div>
+      </div>
+      <div class="ritual-stat">
+        <div class="ritual-stat-label">Missions abandonnées</div>
+        <div class="ritual-stat-value red">${am.length}</div>
+      </div>
+      <div class="ritual-stat">
+        <div class="ritual-stat-label">Tâches complétées</div>
+        <div class="ritual-stat-value amber">${td}</div>
+      </div>
+    </div>
+    ${cm.length ? `
+      <div class="ritual-sub-title">// Missions accomplies</div>
+      <div class="ritual-list">
+        ${cm.map(m=>`<div class="ritual-item ok"><span style="flex:1">${escapeHtml(m.name)}</span></div>`).join('')}
+      </div>` : '<div class="empty">Aucune mission complétée aujourd\'hui.</div>'}
+    ${am.length ? `
+      <div class="ritual-sub-title">// Missions abandonnées</div>
+      <div class="ritual-list">
+        ${am.map(m=>`<div class="ritual-item warn"><span style="flex:1">${escapeHtml(m.name)}</span></div>`).join('')}
+      </div>` : ''}
+    <div class="ritual-actions">
+      <button class="btn primary" onclick="ritualGoStep(2)">Continuer →</button>
+    </div>
+  `;
+}
+
+function renderRitualStep2(){
+  const tom = getTomorrowStr();
+  const allTasks = [];
+  SECTORS.forEach(s=>{
+    state.sectors[s.id].tasks.filter(t=>!t.done).forEach(t=>{
+      allTasks.push(Object.assign({}, t, {sectorId:s.id, sectorMeta:s}));
+    });
+  });
+  allTasks.sort((a,b)=>{
+    const ap = a.plannedFor===tom?0:1;
+    const bp = b.plannedFor===tom?0:1;
+    if(ap!==bp) return ap-bp;
+    return a.q - b.q;
+  });
+  const el = document.getElementById('ritual-step-2');
+  el.innerHTML = `
+    <div class="panel-title">// Étape 2 — Préparer demain</div>
+    <div class="tiny muted" style="margin-bottom:18px">Sélectionne les tâches que tu veux engager demain.</div>
+    <div class="ritual-list">
+      ${allTasks.length ? allTasks.map(t=>`
+        <div class="ritual-task ${t.plannedFor===tom?'picked':''}">
+          <div class="ritual-task-check" onclick="toggleTomorrow('${t.sectorId}','${t.id}')">${t.plannedFor===tom?'✓':''}</div>
+          <div class="ritual-task-body">
+            <div class="ritual-task-name">${escapeHtml(t.name)}</div>
+            <div class="ritual-task-meta">// ${t.sectorMeta.tag}</div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty">Aucune tâche en attente.</div>'}
+    </div>
+    <div class="ritual-actions">
+      <button class="btn ghost" onclick="ritualGoStep(1)">← Retour</button>
+      <button class="btn primary" onclick="ritualGoStep(3)">Continuer →</button>
+    </div>
+  `;
+}
+
+function renderRitualStep3(){
+  const tom = getTomorrowStr();
+  const allTasks = [];
+  SECTORS.forEach(s=>{
+    state.sectors[s.id].tasks.filter(t=>!t.done && t.plannedFor===tom).forEach(t=>{
+      allTasks.push(Object.assign({}, t, {sectorId:s.id, sectorMeta:s}));
+    });
+  });
+  const el = document.getElementById('ritual-step-3');
+  el.innerHTML = `
+    <div class="panel-title">// Étape 3 — Planifier demain</div>
+    <div class="tiny muted" style="margin-bottom:18px">Assigne des créneaux horaires aux tâches de demain pour structurer ta journée.</div>
+    <div class="ritual-list">
+      ${allTasks.length ? allTasks.map(t=>`
+        <div class="ritual-task">
+          <div class="ritual-task-body">
+            <div class="ritual-task-name">${escapeHtml(t.name)}</div>
+            <div class="ritual-task-meta">// ${t.sectorMeta.tag} ${t.startTime ? ' • '+t.startTime : ' • Sans horaire'} ${t.duration?' • '+t.duration+'min':''}</div>
+          </div>
+          <button class="ritual-task-q" style="background:var(--amber-bright);color:#0a0a0f;border:none" onclick="setTaskTime('${t.sectorId}','${t.id}')">⏰ AJOUTER HEURE</button>
+        </div>
+      `).join('') : '<div class="empty">Aucune tâche prévue pour demain.</div>'}
+    </div>
+    <div class="ritual-actions">
+      <button class="btn ghost" onclick="ritualGoStep(2)">← Retour</button>
+      <button class="btn primary" onclick="ritualGoStep(4)">Continuer →</button>
+    </div>
+  `;
+}
+
+function renderRitualStep4(){
+  const log = todayLog();
+  const tomCount = countTomorrowTasks();
+  const today = todayStr();
+  const alreadyDone = !!state.ritualHistory[today];
+  const el = document.getElementById('ritual-step-4');
+  el.innerHTML = `
+    <div class="panel-title">// Étape 4 — Valider</div>
+    <div style="font-size:15px;color:var(--text-2);line-height:1.7;margin-bottom:24px">
+      Tu t'apprêtes à clôturer la journée.<br><br>
+      <b style="color:var(--ok)">${log.completedMissions.length}</b> mission(s) complétée(s) —
+      <b style="color:var(--red-bright)">${log.abortedMissions.length}</b> abandonnée(s) —
+      <b style="color:var(--amber-bright)">${log.tasksDone}</b> tâche(s) terminée(s).<br>
+      <b style="color:var(--amber-bright)">${tomCount}</b> tâche(s) cadrée(s) pour demain.<br><br>
+      <em style="color:var(--text);font-style:normal">Le streak ne progresse que si tu valides ce rituel.</em>
+    </div>
+    ${alreadyDone ? `
+      <div class="ritual-validated">
+        <div class="ritual-validated-tag">✓ JOURNÉE DÉJÀ VALIDÉE</div>
+      </div>
+      <div class="ritual-actions">
+        <button class="btn ghost" onclick="ritualGoStep(3)">← Retour</button>
+        <button class="btn" onclick="go('home')">Retour au QG</button>
+      </div>
+    ` : `
+      <div class="ritual-actions">
+        <button class="btn ghost" onclick="ritualGoStep(3)">← Retour</button>
+        <button class="btn primary" onclick="validateRitual()">✓ VALIDER LA JOURNÉE</button>
+      </div>
+    `}
+  `;
+}
+
+function toggleTomorrow(sectorId, taskId){
+  const t = findTask(sectorId, taskId);
+  if(!t) return;
+  const tom = getTomorrowStr();
+  t.plannedFor = (t.plannedFor === tom) ? null : tom;
+  save();
+  renderRitualStep2();
+}
+
+function countTomorrowTasks(){
+  const tom = getTomorrowStr();
+  let n=0;
+  SECTORS.forEach(s=>{
+    state.sectors[s.id].tasks.forEach(t=>{ if(t.plannedFor===tom && !t.done) n++; });
+  });
+  return n;
+}
+
+function todayLog(){
+  const t = todayStr();
+  if(!state.dailyLog[t]) state.dailyLog[t] = {completedMissions:[], abortedMissions:[], tasksDone:0};
+  return state.dailyLog[t];
+}
+
+function getTomorrowStr(){
+  const d=new Date(); d.setDate(d.getDate()+1);
+  return dateStr(d);
+}
+
+function validateRitual(){
+  const today = todayStr();
+  if(state.ritualHistory[today]){
+    go('home'); return;
+  }
+  state.ritualHistory[today] = true;
+  bumpStreak();
+  save();
+  go('home');
+}
+
+function bumpStreak(){
+  const today = todayStr();
+  if(state.streak.lastActiveDate === today) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yStr = dateStr(y);
+  if(state.streak.lastActiveDate === yStr){
+    state.streak.count += 1;
+  } else if(state.streak.lastActiveDate === null){
+    state.streak.count = 1;
+  } else {
+    state.streak.count = 1;
+  }
+  state.streak.lastActiveDate = today;
+  state.streak.history[today] = true;
+}
+
+function findTask(sectorId, taskId){
+  return state.sectors[sectorId].tasks.find(t=>t.id===taskId);
+}
+
+function dateStr(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function save(){
+  try{ localStorage.setItem('roanapura.v1', JSON.stringify(state)); }
+  catch(e){ console.warn('save failed',e); }
 }
 
 </script>
