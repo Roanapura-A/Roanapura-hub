@@ -1479,23 +1479,6 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 
 <script>
 /* ============================================================
-   FIREBASE INITIALIZATION
-   ============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw",
-  authDomain: "roanapura-hub.firebaseapp.com",
-  databaseURL: "https://roanapura-hub-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "roanapura-hub",
-  storageBucket: "roanapura-hub.firebasestorage.app",
-  messagingSenderId: "214159292252",
-  appId: "1:214159292252:web:6107391966fe8a7c0df399"
-};
-
-if(typeof firebase !== 'undefined'){
-  firebase.initializeApp(firebaseConfig);
-}
-
-/* ============================================================
    ROANAPURA — STATE + LOGIC
    ============================================================ */
 
@@ -3398,11 +3381,8 @@ async function deleteTaskWithCalendar(sectorId, taskId){
 
 // --------- Google Sign In ---------
 function signInWithGoogle(){
-  if(!googleAuthProvider){
-    initGoogleAuth();
-  }
-  if(typeof firebase !== 'undefined' && firebase.auth && googleAuthProvider){
-    firebase.auth().signInWithPopup(googleAuthProvider).catch(e=>{
+  if(typeof firebase !== 'undefined' && firebase.auth && googleProvider){
+    firebase.auth().signInWithPopup(googleProvider).catch(e=>{
       console.warn('signin failed', e);
       alert('Connexion échouée : '+(e.message||e.code||e));
     });
