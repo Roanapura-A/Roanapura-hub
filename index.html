@@ -3404,15 +3404,17 @@ if(typeof firebase !== 'undefined' && firebase.auth){
     if(user){
       console.log('Google user connected:', user.email);
       if(typeof gapi !== 'undefined'){
-        gapi.client.init({
-          apiKey: 'AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw',
-          clientId: '214159292252-0ia20ro6peprpjscg0195sv00amef7j6.apps.googleusercontent.com',
-          scope: 'https://www.googleapis.com/auth/calendar.events',
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
-        }).then(()=>{
-          console.log('Google API Client initialized');
-        }).catch(e=>{
-          console.warn('Google API init failed', e);
+        gapi.load('client', ()=>{
+          gapi.client.init({
+            apiKey: 'AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw',
+            clientId: '214159292252-0ia20ro6peprpjscg0195sv00amef7j6.apps.googleusercontent.com',
+            scope: 'https://www.googleapis.com/auth/calendar.events',
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
+          }).then(()=>{
+            console.log('Google API Client initialized');
+          }).catch(e=>{
+            console.warn('Google API init failed', e);
+          });
         });
       }
     } else {
