@@ -3440,7 +3440,6 @@ auth.onAuthStateChanged(async (user) => {
 
     overlay.classList.remove('open');
     document.body.classList.remove('auth-overlay-open');
-    render();
 
     // Initialize gapi.client for Calendar API with the access token
     if(typeof gapi !== 'undefined' && window.calendarAccessToken){
