@@ -2824,9 +2824,12 @@ function signInWithGoogle(){
   auth.signInWithPopup(googleProvider).then(result=>{
     // Extract access token for Calendar API
     const credential = result.credential;
+    console.log('[Auth] Login result:', {hasCredential: !!credential, credentialKeys: credential ? Object.keys(credential) : null});
     if(credential && credential.accessToken){
       window.calendarAccessToken = credential.accessToken;
-      console.log('[Auth] Access token obtained for Calendar API');
+      console.log('[Auth] Access token obtained:', window.calendarAccessToken.substring(0,20)+'...');
+    } else {
+      console.warn('[Auth] No accessToken in credential:', credential);
     }
   }).catch(e=>{
     console.warn('signin failed', e);
@@ -3280,6 +3283,11 @@ function initGoogleAuth(){
 
 async function calendarCreateEvent(task){
   if(!googleUser || !task.startTime || !task.plannedFor) return null;
+  if(!window.calendarAccessToken){
+    console.warn('[Calendar] No access token available');
+    return null;
+  }
+
   try{
     const today = todayStr();
     const eventDate = task.plannedFor || today;
@@ -3300,25 +3308,37 @@ async function calendarCreateEvent(task){
       }
     };
 
-    const result = await gapi.client.calendar.events.insert({
-      calendarId: 'primary',
-      resource: event
+    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${window.calendarAccessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event)
     });
 
-    if(result.result && result.result.id){
-      task.calendarEventId = result.result.id;
-      save();
-      console.log('Calendar event created:', result.result.id);
-      return result.result.id;
+    if(response.ok){
+      const result = await response.json();
+      console.log('[Calendar] Event created:', result.id);
+      return result.id;
+    } else {
+      const error = await response.json();
+      console.error('[Calendar] Create failed:', error);
+      return null;
     }
   }catch(e){
-    console.warn('Calendar create failed', e);
+    console.warn('[Calendar] Create error', e);
   }
   return null;
 }
 
 async function calendarUpdateEvent(task){
   if(!googleUser || !task.calendarEventId || !task.startTime) return false;
+  if(!window.calendarAccessToken){
+    console.warn('[Calendar] No access token available');
+    return false;
+  }
+
   try{
     const eventDate = task.plannedFor || todayStr();
     const [hours, minutes] = task.startTime.split(':');
@@ -3338,34 +3358,55 @@ async function calendarUpdateEvent(task){
       }
     };
 
-    const result = await gapi.client.calendar.events.update({
-      calendarId: 'primary',
-      eventId: task.calendarEventId,
-      resource: event
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.calendarEventId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${window.calendarAccessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event)
     });
 
-    return !!result.result;
+    if(response.ok){
+      console.log('[Calendar] Event updated:', task.calendarEventId);
+      return true;
+    } else {
+      const error = await response.json();
+      console.error('[Calendar] Update failed:', error);
+      return false;
+    }
   }catch(e){
-    console.warn('Calendar update failed', e);
+    console.warn('[Calendar] Update error', e);
   }
   return false;
 }
 
 async function calendarDeleteEvent(task){
   if(!googleUser || !task.calendarEventId) return false;
+  if(!window.calendarAccessToken){
+    console.warn('[Calendar] No access token available');
+    return false;
+  }
+
   try{
-    const result = await gapi.client.calendar.events.delete({
-      calendarId: 'primary',
-      eventId: task.calendarEventId
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.calendarEventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${window.calendarAccessToken}`
+      }
     });
 
-    if(result){
+    if(response.ok){
+      console.log('[Calendar] Event deleted:', task.calendarEventId);
       task.calendarEventId = null;
       save();
+      return true;
+    } else {
+      console.error('[Calendar] Delete failed:', response.status);
+      return false;
     }
-    return !!result;
   }catch(e){
-    console.warn('Calendar delete failed', e);
+    console.warn('[Calendar] Delete error', e);
   }
   return false;
 }
