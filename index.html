@@ -10,6 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
 <script src="https://apis.google.com/js/api.js"></script>
 <style>
 /* ============================================================
@@ -1545,6 +1546,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.addScope('https://www.googleapis.com/auth/calendar.events');
 
 let currentUser = null;
 let stateLoaded = false;
@@ -2819,7 +2821,14 @@ async function injectLocalData(){
 
 // --------- Auth ---------
 function signInWithGoogle(){
-  auth.signInWithPopup(googleProvider).catch(e=>{
+  auth.signInWithPopup(googleProvider).then(result=>{
+    // Extract access token for Calendar API
+    const credential = result.credential;
+    if(credential && credential.accessToken){
+      window.calendarAccessToken = credential.accessToken;
+      console.log('[Auth] Access token obtained for Calendar API');
+    }
+  }).catch(e=>{
     console.warn('signin failed', e);
     alert('Connexion échouée : '+(e.message||e.code||e));
   });
@@ -3263,14 +3272,10 @@ function save(){
 }
 
 // --------- Google Calendar Integration ---------
-let googleAuthProvider = null;
 let googleUser = null;
 
 function initGoogleAuth(){
-  if(typeof firebase !== 'undefined' && firebase.auth){
-    googleAuthProvider = new firebase.auth.GoogleAuthProvider();
-    googleAuthProvider.addScope('https://www.googleapis.com/auth/calendar.events');
-  }
+  // No-op : Firebase Auth handles Google OAuth
 }
 
 async function calendarCreateEvent(task){
@@ -3379,49 +3384,48 @@ async function deleteTaskWithCalendar(sectorId, taskId){
   save();
 }
 
-// --------- Google Sign In ---------
-function signInWithGoogle(){
-  if(typeof firebase !== 'undefined' && firebase.auth && googleProvider){
-    firebase.auth().signInWithPopup(googleProvider).catch(e=>{
-      console.warn('signin failed', e);
-      alert('Connexion échouée : '+(e.message||e.code||e));
-    });
-  }
-}
-
-function signOut(){
-  if(typeof firebase !== 'undefined' && firebase.auth){
-    firebase.auth().signOut();
-  }
-}
-
 // --------- Initialize on startup ---------
 initGoogleAuth();
 
-if(typeof firebase !== 'undefined' && firebase.auth){
-  firebase.auth().onAuthStateChanged((user) => {
+// --------- Enhanced onAuthStateChanged - handles both app data + gapi calendar ---------
+auth.onAuthStateChanged(async (user) => {
+  const overlay = document.getElementById('auth-overlay');
+  if(user){
+    currentUser = user;
     googleUser = user;
-    if(user){
-      console.log('Google user connected:', user.email);
-      if(typeof gapi !== 'undefined'){
-        gapi.load('client', ()=>{
-          gapi.client.init({
-            apiKey: 'AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw',
-            clientId: '214159292252-0ia20ro6peprpjscg0195sv00amef7j6.apps.googleusercontent.com',
-            scope: 'https://www.googleapis.com/auth/calendar.events',
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
-          }).then(()=>{
-            console.log('Google API Client initialized');
-          }).catch(e=>{
-            console.warn('Google API init failed', e);
-          });
+    stateLoaded = false;
+    state = await load();
+    stateLoaded = true;
+
+    overlay.classList.remove('open');
+    document.body.classList.remove('auth-overlay-open');
+    render();
+
+    // Initialize gapi.client for Calendar API with the access token
+    if(typeof gapi !== 'undefined' && window.calendarAccessToken){
+      console.log('[gapi] Initializing client with access token...');
+      gapi.load('client', () => {
+        gapi.client.init({
+          apiKey: 'AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw',
+          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
+        }).then(() => {
+          // Set the access token for API calls
+          gapi.client.setToken({ access_token: window.calendarAccessToken });
+          console.log('[gapi] Client initialized successfully with access token');
+        }).catch(err => {
+          console.error('[gapi] Init failed:', err);
         });
-      }
+      });
     } else {
-      googleUser = null;
+      console.log('[gapi] Waiting for access token...');
     }
-  });
-}
+  } else {
+    currentUser = null;
+    googleUser = null;
+    overlay.classList.add('open');
+    document.body.classList.add('auth-overlay-open');
+  }
+});
 
 </script>
 </body>
