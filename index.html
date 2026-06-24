@@ -3741,11 +3741,16 @@ async function updateSectorPermissions(uid){
   await db.ref(`meta/whitelist/${uid}/allowedSectors`).set(allowedSectors);
   console.log('[Admin] Permissions updated for', uid);
 
-  // If updating current user's permissions, reload and re-render
+  // Always re-render to show changes
+  closeSectorPermissions();
+
+  // If updating current user's permissions, reload currentUserAllowedSectors
   if(uid === currentUser.uid){
     currentUserAllowedSectors = allowedSectors;
-    renderHome();
   }
+
+  // Re-render home to show sector changes
+  renderHome();
 }
 
 function closeSectorPermissions(){
