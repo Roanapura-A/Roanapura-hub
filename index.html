@@ -3623,10 +3623,16 @@ async function renderDataSelector(){
   });
 }
 
-function changeActiveDataUid(uid){
+async function changeActiveDataUid(uid){
   if(!uid) uid = currentUser.uid;
   activeDataUid = uid;
   console.log('[Admin] activeDataUid changed to', uid.substring(0,8)+'...');
+
+  // Reload state for the new user
+  stateLoaded = false;
+  state = await load();
+  stateLoaded = true;
+
   renderHome(); // Re-render with new data
 }
 
