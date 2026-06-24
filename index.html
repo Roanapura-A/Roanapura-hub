@@ -2173,16 +2173,25 @@ function escapeHtml(s){
 }
 
 // --------- Actions ---------
-function addTask(){
+async function addTask(){
   const name = document.getElementById('new-task-name').value.trim();
   if(!name) return;
   const q = parseInt(document.getElementById('new-task-q').value,10);
+  const startTime = document.getElementById('new-task-time').value || null;
+  const duration = document.getElementById('new-task-duration').value ? parseInt(document.getElementById('new-task-duration').value,10) : null;
+
+  // Get the label of the user we're assigning to (activeDataUid)
+  const assignedTo = await getAssignedToLabel();
+
   const task = {
-    id:uid(), name, q, recur:recurChecked, done:false, createdAt:Date.now()
+    id:uid(), name, q, recur:recurChecked, done:false, createdAt:Date.now(),
+    startTime, duration, assignedTo
   };
   state.sectors[currentSector].tasks.push(task);
   save();
   document.getElementById('new-task-name').value='';
+  document.getElementById('new-task-time').value='';
+  document.getElementById('new-task-duration').value='';
   setRecur(false);
   renderSector();
 }
@@ -3497,6 +3506,30 @@ async function deleteTaskWithCalendar(sectorId, taskId){
   save();
 }
 
+// --------- Helper Functions ---------
+async function getLabelForUid(uid){
+  if(uid === currentUser.uid) return currentUserLabel;
+  const snapshot = await db.ref(`meta/whitelist/${uid}`).once('value');
+  const entry = snapshot.val();
+  return entry ? entry.label : uid;
+}
+
+async function getAssignedToLabel(){
+  // Get the label for the user whose data we're viewing (activeDataUid)
+  if(activeDataUid === currentUser.uid) return currentUserLabel;
+  const snapshot = await db.ref(`meta/whitelist/${activeDataUid}`).once('value');
+  const entry = snapshot.val();
+  return entry ? entry.label : activeDataUid;
+}
+
+function canSeeTask(task){
+  // Determine if current user can see this task
+  if(currentUserIsAdmin) return true; // Admin sees everything
+
+  // Non-admin can only see tasks assigned to them
+  return task.assignedTo === currentUserLabel;
+}
+
 // --------- Admin Panel Functions ---------
 function toggleAdminPanel(){
   const panel = document.getElementById('admin-panel');
@@ -3521,7 +3554,7 @@ async function renderAdminPanel(){
   }
 
   toggle.style.display = 'block';
-  panel.style.display = 'block';
+  // Panel starts closed, don't auto-open
 
   // Render pending invites
   const pendingRef = db.ref('meta/pendingInvites');
@@ -3670,6 +3703,8 @@ initGoogleAuth();
 
 // --------- Unified onAuthStateChanged with Whitelist + Admin + Calendar ---------
 let activeDataUid = null;
+let currentUserLabel = null; // Label (name) of the logged-in user
+let currentUserIsAdmin = false; // Is the logged-in user an admin?
 
 auth.onAuthStateChanged(async (user) => {
   const overlay = document.getElementById('auth-overlay');
@@ -3699,6 +3734,15 @@ auth.onAuthStateChanged(async (user) => {
           `;
         }
         return;
+      }
+
+      // Set currentUserLabel and currentUserIsAdmin
+      if(user.email === 'a.mazoin@roanapura.fr'){
+        currentUserLabel = 'antoine';
+        currentUserIsAdmin = true;
+      } else if(whitelistEntry){
+        currentUserLabel = whitelistEntry.label;
+        currentUserIsAdmin = whitelistEntry.role === 'admin';
       }
 
       // Access granted - load app data
