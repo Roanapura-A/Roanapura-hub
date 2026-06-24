@@ -1145,6 +1145,35 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
   background:var(--amber-bright);color:#0a0a0f;border-color:var(--amber-bright);
 }
 
+/* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+.admin-panel{
+  position:fixed;bottom:20px;right:20px;z-index:100;max-height:70vh;overflow-y:auto;
+  background:linear-gradient(180deg, var(--surface), var(--bg-2));
+  border:1px solid var(--border);border-left:2px solid var(--red);
+  border-radius:2px;padding:20px;width:350px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.admin-card{display:flex;flex-direction:column;gap:20px}
+.admin-title{
+  font-family:var(--font-display);font-weight:700;font-size:13px;
+  letter-spacing:3px;color:var(--red-bright);text-transform:uppercase;
+}
+.admin-section{display:flex;flex-direction:column;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.admin-section:last-child{border-bottom:none}
+.admin-section-title{font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:2px;text-transform:uppercase}
+.admin-form{display:flex;flex-direction:column;gap:8px}
+.admin-input{padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-size:12px;transition:border-color .2s}
+.admin-input:focus{border-color:var(--red)}
+.admin-item{padding:8px;background:var(--surface-3);border:1px solid var(--border);border-radius:2px;font-size:11px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.admin-item-info{flex:1}
+.admin-item-email{color:var(--text);font-weight:500}
+.admin-item-label{color:var(--text-3);font-size:10px}
+.admin-item-uid-input{flex:1;padding:4px 6px;background:var(--surface);border:1px solid var(--border);font-size:10px;color:var(--text)}
+.admin-item-btn{padding:4px 10px;background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;border-radius:1px;transition:background .2s}
+.admin-item-btn:hover{background:var(--red-bright)}
+
 </style>
 </head>
 <body>
@@ -1425,6 +1454,47 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
   </div>
 </div>
 
+<!-- ========== ADMIN PANEL ========== -->
+<div class="admin-panel" id="admin-panel" style="display:none">
+  <div class="admin-card">
+    <div class="admin-title">// ADMIN PANEL</div>
+
+    <!-- Invite Form -->
+    <div class="admin-section">
+      <div class="admin-section-title">Inviter quelqu'un</div>
+      <div class="admin-form">
+        <input type="email" id="invite-email" placeholder="Email" class="admin-input">
+        <input type="text" id="invite-label" placeholder="Nom affiché" class="admin-input">
+        <select id="invite-role" class="admin-input">
+          <option value="member">Member</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button class="btn primary" onclick="submitInvite()">Inviter</button>
+      </div>
+    </div>
+
+    <!-- Pending Invites -->
+    <div class="admin-section">
+      <div class="admin-section-title">Invitations en attente</div>
+      <div id="pending-invites-list"></div>
+    </div>
+
+    <!-- Confirmed Whitelist -->
+    <div class="admin-section">
+      <div class="admin-section-title">Accès confirmés</div>
+      <div id="whitelist-list"></div>
+    </div>
+
+    <!-- Data Selector -->
+    <div class="admin-section">
+      <div class="admin-section-title">Voir les données de</div>
+      <select id="data-selector" class="admin-input" onchange="changeActiveDataUid(this.value)">
+        <option value="">Chargement...</option>
+      </select>
+    </div>
+  </div>
+</div>
+
 <!-- ========== WEEKLY REVIEW MODAL ========== -->
 <div class="weekly-view-modal" id="weekly-modal">
   <div class="weekly-content">
@@ -1617,7 +1687,7 @@ async function load(){
     console.warn('[Firebase load] Aucun utilisateur authentifié — lecture annulée.');
     return defaultState();
   }
-  const path = 'users/'+currentUser.uid;
+  const path = 'users/'+(activeDataUid || currentUser.uid);
   try{
     console.log('[Firebase load] ← '+path);
     const snap = await db.ref(path).once('value');
@@ -1650,11 +1720,11 @@ function save(){
     console.warn('[Firebase save] État pas encore chargé — écriture annulée.');
     return;
   }
-  const uid = currentUser.uid;
+  const uid = activeDataUid || currentUser.uid;
   if(saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{
-    if(!currentUser || currentUser.uid !== uid){
-      console.warn('[Firebase save] Utilisateur changé entre temps — écriture annulée.');
+    if(!currentUser){
+      console.warn('[Firebase save] Utilisateur déconnecté — écriture annulée.');
       return;
     }
     const basePath = 'users/'+uid;
@@ -2797,8 +2867,8 @@ async function injectLocalData(){
     console.warn('[Inject] Utilisateur non authentifié — injection annulée.');
     return false;
   }
-  const userRef = db.ref('users/'+currentUser.uid);
-  const flagRef = db.ref('users/'+currentUser.uid+'/_dataInjected');
+  const userRef = db.ref('users/'+(activeDataUid || currentUser.uid));
+  const flagRef = db.ref('users/'+(activeDataUid || currentUser.uid)+'/_dataInjected');
   try{
     const flagSnap = await flagRef.once('value');
     if(flagSnap.val()){
@@ -2850,28 +2920,7 @@ function signOut(){
   auth.signOut();
 }
 
-auth.onAuthStateChanged(async (user) => {
-  const overlay = document.getElementById('auth-overlay');
-  if(user){
-    currentUser = user;
-    stateLoaded = false;
-    state = await load();
-    stateLoaded = true;
-    const injected = await injectLocalData();
-    if(injected) state = await load();
-    const opEl = document.getElementById('op-name');
-    if(opEl) opEl.textContent = (user.displayName || user.email || 'OPERATOR').toUpperCase();
-    if(overlay) overlay.classList.remove('open');
-    renderHome();
-  } else {
-    currentUser = null;
-    stateLoaded = false;
-    state = defaultState();
-    const opEl = document.getElementById('op-name');
-    if(opEl) opEl.textContent = 'NON CONNECTÉ';
-    if(overlay) overlay.classList.add('open');
-  }
-});
+// REMOVED: This listener is now merged into the unified one below
 
 // --------- Revenue Accordion ---------
 function toggleRevenueAccordion(){
@@ -3435,27 +3484,235 @@ async function deleteTaskWithCalendar(sectorId, taskId){
   save();
 }
 
+// --------- Admin Panel Functions ---------
+async function renderAdminPanel(){
+  const panel = document.getElementById('admin-panel');
+  if(!panel) return;
+
+  const isAdmin = currentUser && (currentUser.email === 'a.mazoin@roanapura.fr' ||
+    (await db.ref(`meta/whitelist/${currentUser.uid}/role`).once('value')).val() === 'admin');
+
+  if(!isAdmin){
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+
+  // Render pending invites
+  const pendingRef = db.ref('meta/pendingInvites');
+  const pendingSnapshot = await pendingRef.once('value');
+  const pendingInvites = pendingSnapshot.val() || {};
+
+  const pendingList = document.getElementById('pending-invites-list');
+  pendingList.innerHTML = '';
+
+  Object.entries(pendingInvites).forEach(([key, invite]) => {
+    const div = document.createElement('div');
+    div.className = 'admin-item';
+    div.innerHTML = `
+      <div class="admin-item-info">
+        <div class="admin-item-email">${invite.email}</div>
+        <div class="admin-item-label">${invite.label} (${invite.role})</div>
+      </div>
+      <input type="text" class="admin-item-uid-input" placeholder="UID" id="uid-${key}">
+      <button class="admin-item-btn" onclick="confirmInvite('${key}')">✓</button>
+    `;
+    pendingList.appendChild(div);
+  });
+
+  // Render whitelist
+  const whitelistRef = db.ref('meta/whitelist');
+  const whitelistSnapshot = await whitelistRef.once('value');
+  const whitelist = whitelistSnapshot.val() || {};
+
+  const whitelistList = document.getElementById('whitelist-list');
+  whitelistList.innerHTML = '';
+
+  Object.entries(whitelist).forEach(([uid, entry]) => {
+    const div = document.createElement('div');
+    div.className = 'admin-item';
+    div.innerHTML = `
+      <div class="admin-item-info">
+        <div class="admin-item-email">${entry.email}</div>
+        <div class="admin-item-label">${entry.label} (${entry.role})</div>
+      </div>
+      <div style="color:var(--text-3);font-size:9px">${uid.substring(0,8)}...</div>
+    `;
+    whitelistList.appendChild(div);
+  });
+}
+
+async function submitInvite(){
+  const email = document.getElementById('invite-email').value;
+  const label = document.getElementById('invite-label').value;
+  const role = document.getElementById('invite-role').value;
+
+  if(!email || !label){
+    alert('Email et label requis');
+    return;
+  }
+
+  const newInvite = {email, label, role, createdAt: new Date().toISOString()};
+  await db.ref('meta/pendingInvites').push(newInvite);
+
+  document.getElementById('invite-email').value = '';
+  document.getElementById('invite-label').value = '';
+  document.getElementById('invite-role').value = 'member';
+
+  renderAdminPanel();
+  console.log('[Admin] Invitation créée pour', email);
+}
+
+async function confirmInvite(inviteKey){
+  const uid = document.getElementById(`uid-${inviteKey}`).value;
+  if(!uid){
+    alert('UID requis');
+    return;
+  }
+
+  const inviteRef = db.ref(`meta/pendingInvites/${inviteKey}`);
+  const inviteSnapshot = await inviteRef.once('value');
+  const invite = inviteSnapshot.val();
+
+  if(!invite){
+    alert('Invitation introuvable');
+    return;
+  }
+
+  // Create whitelist entry
+  await db.ref(`meta/whitelist/${uid}`).set({
+    email: invite.email,
+    label: invite.label,
+    role: invite.role,
+    createdAt: invite.createdAt,
+    confirmedAt: new Date().toISOString()
+  });
+
+  // Remove pending invite
+  await inviteRef.remove();
+
+  renderAdminPanel();
+  console.log('[Admin] Invitation confirmée pour', uid);
+}
+
+async function renderDataSelector(){
+  const selector = document.getElementById('data-selector');
+  if(!selector) return;
+
+  const isAdmin = currentUser && (currentUser.email === 'a.mazoin@roanapura.fr' ||
+    (await db.ref(`meta/whitelist/${currentUser.uid}/role`).once('value')).val() === 'admin');
+
+  if(!isAdmin){
+    selector.style.display = 'none';
+    return;
+  }
+
+  // Populate selector with whitelist entries
+  const whitelistRef = db.ref('meta/whitelist');
+  const whitelistSnapshot = await whitelistRef.once('value');
+  const whitelist = whitelistSnapshot.val() || {};
+
+  selector.innerHTML = '<option value="">Moi</option>';
+
+  Object.entries(whitelist).forEach(([uid, entry]) => {
+    const option = document.createElement('option');
+    option.value = uid;
+    option.textContent = entry.label;
+    selector.appendChild(option);
+  });
+}
+
+function changeActiveDataUid(uid){
+  if(!uid) uid = currentUser.uid;
+  activeDataUid = uid;
+  console.log('[Admin] activeDataUid changed to', uid.substring(0,8)+'...');
+  renderHome(); // Re-render with new data
+}
+
 // --------- Initialize on startup ---------
 initGoogleAuth();
 
-// --------- Enhanced onAuthStateChanged - handles both app data + gapi calendar ---------
+// --------- Unified onAuthStateChanged with Whitelist + Admin + Calendar ---------
+let activeDataUid = null;
+
 auth.onAuthStateChanged(async (user) => {
   const overlay = document.getElementById('auth-overlay');
   if(user){
     currentUser = user;
     googleUser = user;
-    stateLoaded = false;
-    state = await load();
-    stateLoaded = true;
+    activeDataUid = user.uid;
 
-    overlay.classList.remove('open');
-    document.body.classList.remove('auth-overlay-open');
+    // Check whitelist access
+    const whitelistRef = db.ref(`meta/whitelist/${user.uid}`);
+    try {
+      const snapshot = await whitelistRef.once('value');
+      const whitelistEntry = snapshot.val();
 
-    // Note: We use REST API directly with fetch(), no need to initialize gapi.client
-    console.log('[Calendar] Ready to sync — using REST API with access token');
+      // If not in whitelist AND not the admin email, deny access
+      if(!whitelistEntry && user.email !== 'a.mazoin@roanapura.fr'){
+        console.log('[Auth] User not in whitelist, signing out');
+        auth.signOut();
+        overlay.classList.add('open');
+        const authBox = document.querySelector('.auth-box');
+        if(authBox) {
+          authBox.innerHTML = `
+            <div class="auth-tag">// ACCÈS REFUSÉ</div>
+            <div class="auth-title">ROANA<span>PURA</span></div>
+            <div class="auth-sub">Accès non autorisé.<br>Contacte Antoine pour une invitation.</div>
+            <div class="auth-foot">// ROANAPURA HUB // V1.0</div>
+          `;
+        }
+        return;
+      }
+
+      // Access granted - load app data
+      stateLoaded = false;
+      state = await load();
+      stateLoaded = true;
+      const injected = await injectLocalData();
+      if(injected) state = await load();
+
+      const opEl = document.getElementById('op-name');
+      if(opEl) opEl.textContent = (user.displayName || user.email || 'OPERATOR').toUpperCase();
+
+      overlay.classList.remove('open');
+      document.body.classList.remove('auth-overlay-open');
+
+      // Render UI
+      renderHome();
+      renderAdminPanel();
+      renderDataSelector();
+
+      console.log('[Auth] Access granted');
+      console.log('[Calendar] Ready to sync — using REST API with access token');
+
+    } catch(e) {
+      if(e.code === 'PERMISSION_DENIED'){
+        console.log('[Auth] Permission denied - user not in whitelist');
+        auth.signOut();
+        overlay.classList.add('open');
+        const authBox = document.querySelector('.auth-box');
+        if(authBox) {
+          authBox.innerHTML = `
+            <div class="auth-tag">// ACCÈS REFUSÉ</div>
+            <div class="auth-title">ROANA<span>PURA</span></div>
+            <div class="auth-sub">Accès non autorisé.<br>Contacte Antoine pour une invitation.</div>
+            <div class="auth-foot">// ROANAPURA HUB // V1.0</div>
+          `;
+        }
+      } else {
+        console.error('[Auth] Error checking whitelist:', e);
+      }
+    }
   } else {
     currentUser = null;
     googleUser = null;
+    activeDataUid = null;
+    stateLoaded = false;
+    state = defaultState();
+    const opEl = document.getElementById('op-name');
+    if(opEl) opEl.textContent = 'NON CONNECTÉ';
     overlay.classList.add('open');
     document.body.classList.add('auth-overlay-open');
   }
