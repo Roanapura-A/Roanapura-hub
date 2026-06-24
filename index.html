@@ -2824,12 +2824,22 @@ function signInWithGoogle(){
   auth.signInWithPopup(googleProvider).then(result=>{
     // Extract access token for Calendar API
     const credential = result.credential;
-    console.log('[Auth] Login result:', {hasCredential: !!credential, credentialKeys: credential ? Object.keys(credential) : null});
+    const user = result.user;
+    console.log('[Auth] Login result credential keys:', credential ? Object.keys(credential) : 'NO CREDENTIAL');
+    console.log('[Auth] Credential:', credential);
+    console.log('[Auth] User:', user);
+
     if(credential && credential.accessToken){
       window.calendarAccessToken = credential.accessToken;
-      console.log('[Auth] Access token obtained:', window.calendarAccessToken.substring(0,20)+'...');
+      console.log('[Auth] ✓ Access token obtained:', window.calendarAccessToken.substring(0,20)+'...');
     } else {
-      console.warn('[Auth] No accessToken in credential:', credential);
+      console.warn('[Auth] ✗ No accessToken in credential');
+      // Try alternative: get token from user
+      if(user){
+        user.getIdToken().then(token => {
+          console.log('[Auth] Got ID token instead:', token.substring(0,20)+'...');
+        });
+      }
     }
   }).catch(e=>{
     console.warn('signin failed', e);
