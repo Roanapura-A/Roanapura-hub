@@ -3614,14 +3614,32 @@ async function renderAdminPanel(){
   Object.entries(whitelist).forEach(([uid, entry]) => {
     const div = document.createElement('div');
     div.className = 'admin-item';
-    div.innerHTML = `
-      <div class="admin-item-info">
-        <div class="admin-item-email">${entry.email}</div>
-        <div class="admin-item-label">${entry.label} (${entry.role})</div>
-      </div>
-      <button class="admin-item-btn" onclick="editSectorPermissions('${uid}', '${entry.label}')">⚙</button>
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'space-between';
+
+    const info = document.createElement('div');
+    info.className = 'admin-item-info';
+    info.innerHTML = `
+      <div class="admin-item-email">${entry.email}</div>
+      <div class="admin-item-label">${entry.label} (${entry.role})</div>
     `;
+
+    const btn = document.createElement('button');
+    btn.className = 'admin-item-btn';
+    btn.textContent = '⚙';
+    btn.dataset.uid = uid;
+    btn.dataset.label = entry.label;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      console.log('[Admin] Button clicked for', uid);
+      editSectorPermissions(btn.dataset.uid, btn.dataset.label);
+    };
+
+    div.appendChild(info);
+    div.appendChild(btn);
     whitelistList.appendChild(div);
+    console.log('[Admin] Added button for', entry.label);
   });
 
   // Render sector permissions
@@ -3683,9 +3701,13 @@ async function confirmInvite(inviteKey){
 }
 
 async function editSectorPermissions(uid, label){
+  console.log('[Admin] editSectorPermissions called for', uid, label);
   const entry = await db.ref(`meta/whitelist/${uid}`).once('value');
   const whitelistEntry = entry.val();
+  console.log('[Admin] whitelistEntry:', whitelistEntry);
   const allowedSectors = whitelistEntry.allowedSectors || [];
+  console.log('[Admin] allowedSectors:', allowedSectors);
+  console.log('[Admin] SECTORS:', SECTORS);
 
   let html = `<div style="padding:10px;background:var(--surface-3);border-radius:2px">
     <div style="margin-bottom:10px;font-weight:600">${label} — Secteurs</div>`;
@@ -3718,6 +3740,12 @@ async function updateSectorPermissions(uid){
 
   await db.ref(`meta/whitelist/${uid}/allowedSectors`).set(allowedSectors);
   console.log('[Admin] Permissions updated for', uid);
+
+  // If updating current user's permissions, reload and re-render
+  if(uid === currentUser.uid){
+    currentUserAllowedSectors = allowedSectors;
+    renderHome();
+  }
 }
 
 function closeSectorPermissions(){
