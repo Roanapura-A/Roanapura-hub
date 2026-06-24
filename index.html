@@ -1970,7 +1970,7 @@ function renderHome(){
   wrap.innerHTML='';
   SECTORS.forEach(s=>{
     const sd = state.sectors[s.id];
-    const tasks = sd.tasks.filter(t=>!t.done);
+    const tasks = sd.tasks.filter(t=>!t.done && canSeeTask(t));
     const q1 = tasks.filter(t=>t.q===1).length;
     const q2 = tasks.filter(t=>t.q===2).length;
     const total = tasks.length;
@@ -2070,7 +2070,7 @@ function renderSector(){
     streamsWrap.style.display='none';
   }
 
-  const tasksTotal = sd.tasks.filter(t=>!t.done).length;
+  const tasksTotal = sd.tasks.filter(t=>!t.done && canSeeTask(t)).length;
   document.getElementById('s-tasks-total').textContent = tasksTotal;
   document.getElementById('s-tasks-count').textContent = tasksTotal+' ITEMS';
   document.getElementById('s-missions-done').textContent = sd.missionsDone||0;
@@ -2137,7 +2137,7 @@ function renderSector(){
     const list = document.querySelector(`.quad-list[data-list="${q}"]`);
     list.innerHTML='';
     const items = sd.tasks
-      .filter(t=>t.q===q)
+      .filter(t=>t.q===q && canSeeTask(t))
       .sort((a,b)=> (a.done?1:0)-(b.done?1:0) || a.createdAt-b.createdAt);
     if(items.length===0){
       list.innerHTML = `<div class="quad-empty">— Aucune tâche —</div>`;
