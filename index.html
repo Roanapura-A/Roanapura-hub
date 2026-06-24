@@ -1498,6 +1498,12 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
       <div id="whitelist-list"></div>
     </div>
 
+    <!-- Sector Permissions -->
+    <div class="admin-section">
+      <div class="admin-section-title">Permissions par secteur</div>
+      <div id="sector-permissions-list"></div>
+    </div>
+
     <!-- Data Selector -->
     <div class="admin-section">
       <div class="admin-section-title">Voir les données de</div>
@@ -1934,12 +1940,18 @@ function openRevenueModal(prefillLabel){
 
 // --------- Render: Home ---------
 function renderHome(){
+  // Hide financial info for non-admins
+  const objectiveEl = document.querySelector('.objective');
+  if(objectiveEl) objectiveEl.style.display = currentUserIsAdmin ? 'block' : 'none';
+
   state.caNow = getCaNow();
   const compNow = getCompNow();
-  document.getElementById('ca-now').textContent = state.caNow.toLocaleString('fr-FR');
-  document.getElementById('ca-target').textContent = state.caTarget.toLocaleString('fr-FR');
-  document.getElementById('ca-now-big').textContent = state.caNow.toLocaleString('fr-FR')+'€';
-  document.getElementById('ca-target-big').textContent = state.caTarget.toLocaleString('fr-FR')+'€';
+  if(currentUserIsAdmin){
+    document.getElementById('ca-now').textContent = state.caNow.toLocaleString('fr-FR');
+    document.getElementById('ca-target').textContent = state.caTarget.toLocaleString('fr-FR');
+    document.getElementById('ca-now-big').textContent = state.caNow.toLocaleString('fr-FR')+'€';
+    document.getElementById('ca-target-big').textContent = state.caTarget.toLocaleString('fr-FR')+'€';
+  }
   const pct = Math.min(100, Math.round((state.caNow/state.caTarget)*100));
   document.getElementById('ca-pct').textContent = pct+'%';
   setTimeout(()=>{ document.getElementById('ca-bar').style.width = pct+'%'; }, 50);
@@ -1968,7 +1980,7 @@ function renderHome(){
 
   const wrap = document.getElementById('sectors-grid');
   wrap.innerHTML='';
-  SECTORS.forEach(s=>{
+  SECTORS.filter(s => canUserSeeSector(s.id)).forEach(s=>{
     const sd = state.sectors[s.id];
     const tasks = sd.tasks.filter(t=>!t.done && canSeeTask(t));
     const q1 = tasks.filter(t=>t.q===1).length;
@@ -2075,20 +2087,25 @@ function renderSector(){
   document.getElementById('s-tasks-count').textContent = tasksTotal+' ITEMS';
   document.getElementById('s-missions-done').textContent = sd.missionsDone||0;
 
-  // Revenues
-  const revs = (sd.revenues||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.createdAt-a.createdAt);
-  const revTotal = revs.reduce((s,r)=>s+(r.amount||0), 0);
-  document.getElementById('s-rev-total').textContent = revTotal.toLocaleString('fr-FR')+'€';
-  const revList = document.getElementById('revenue-list');
-  if(revList){
-    revList.innerHTML = revs.length ? revs.map(r=>`
-      <div class="revenue-item">
-        <span class="rev-amount">${r.amount.toLocaleString('fr-FR')}€</span>
-        <span class="rev-date">${r.date||''}</span>
-        <span class="rev-label">${escapeHtml(r.label||'—')}</span>
-        <button class="rev-delete" onclick="deleteRevenue('${currentSector}','${r.id}')">SUPPR</button>
-      </div>
-    `).join('') : '<div class="empty">Aucun revenu encaissé pour ce secteur.</div>';
+  // Revenues (hidden for non-admins)
+  const revAccordion = document.querySelector('#revenue-accordion');
+  if(revAccordion) revAccordion.style.display = currentUserIsAdmin ? 'block' : 'none';
+
+  if(currentUserIsAdmin){
+    const revs = (sd.revenues||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.createdAt-a.createdAt);
+    const revTotal = revs.reduce((s,r)=>s+(r.amount||0), 0);
+    document.getElementById('s-rev-total').textContent = revTotal.toLocaleString('fr-FR')+'€';
+    const revList = document.getElementById('revenue-list');
+    if(revList){
+      revList.innerHTML = revs.length ? revs.map(r=>`
+        <div class="revenue-item">
+          <span class="rev-amount">${r.amount.toLocaleString('fr-FR')}€</span>
+          <span class="rev-date">${r.date||''}</span>
+          <span class="rev-label">${escapeHtml(r.label||'—')}</span>
+          <button class="rev-delete" onclick="deleteRevenue('${currentSector}','${r.id}')">SUPPR</button>
+        </div>
+      `).join('') : '<div class="empty">Aucun revenu encaissé pour ce secteur.</div>';
+    }
   }
 
   const slot = document.getElementById('active-mission-slot');
@@ -3530,6 +3547,14 @@ function canSeeTask(task){
   return task.assignedTo === currentUserLabel;
 }
 
+function canUserSeeSector(sectorId){
+  // Admin can see all sectors
+  if(currentUserIsAdmin) return true;
+
+  // Non-admin: check if sector is in their allowedSectors
+  return currentUserAllowedSectors.includes(sectorId);
+}
+
 // --------- Admin Panel Functions ---------
 function toggleAdminPanel(){
   const panel = document.getElementById('admin-panel');
@@ -3594,10 +3619,14 @@ async function renderAdminPanel(){
         <div class="admin-item-email">${entry.email}</div>
         <div class="admin-item-label">${entry.label} (${entry.role})</div>
       </div>
-      <div style="color:var(--text-3);font-size:9px">${uid.substring(0,8)}...</div>
+      <button class="admin-item-btn" onclick="editSectorPermissions('${uid}', '${entry.label}')">⚙</button>
     `;
     whitelistList.appendChild(div);
   });
+
+  // Render sector permissions
+  const sectorPermsList = document.getElementById('sector-permissions-list');
+  sectorPermsList.innerHTML = '<div style="color:var(--text-3);font-size:10px">Cliquez sur ⚙ pour assigner les secteurs à chaque utilisateur.</div>';
 }
 
 async function submitInvite(){
@@ -3653,6 +3682,49 @@ async function confirmInvite(inviteKey){
   console.log('[Admin] Invitation confirmée pour', uid);
 }
 
+async function editSectorPermissions(uid, label){
+  const entry = await db.ref(`meta/whitelist/${uid}`).once('value');
+  const whitelistEntry = entry.val();
+  const allowedSectors = whitelistEntry.allowedSectors || [];
+
+  let html = `<div style="padding:10px;background:var(--surface-3);border-radius:2px">
+    <div style="margin-bottom:10px;font-weight:600">${label} — Secteurs</div>`;
+
+  SECTORS.forEach(s => {
+    const checked = allowedSectors.includes(s.id);
+    html += `
+      <label style="display:flex;gap:8px;margin:6px 0;align-items:center;cursor:pointer">
+        <input type="checkbox" id="sector-${s.id}" ${checked ? 'checked' : ''} onchange="updateSectorPermissions('${uid}')">
+        <span>${s.name}</span>
+      </label>
+    `;
+  });
+
+  html += `<button class="admin-item-btn" onclick="closeSectorPermissions()" style="margin-top:10px;width:100%">Fermer</button></div>`;
+
+  const modal = document.createElement('div');
+  modal.id = 'sector-perms-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200';
+  modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);padding:20px;border-radius:4px;max-width:400px;max-height:70vh;overflow-y:auto">${html}</div>`;
+  document.body.appendChild(modal);
+}
+
+async function updateSectorPermissions(uid){
+  const allowedSectors = [];
+  SECTORS.forEach(s => {
+    const checkbox = document.getElementById(`sector-${s.id}`);
+    if(checkbox && checkbox.checked) allowedSectors.push(s.id);
+  });
+
+  await db.ref(`meta/whitelist/${uid}/allowedSectors`).set(allowedSectors);
+  console.log('[Admin] Permissions updated for', uid);
+}
+
+function closeSectorPermissions(){
+  const modal = document.getElementById('sector-perms-modal');
+  if(modal) modal.remove();
+}
+
 async function renderDataSelector(){
   const selector = document.getElementById('data-selector');
   if(!selector) return;
@@ -3705,6 +3777,7 @@ initGoogleAuth();
 let activeDataUid = null;
 let currentUserLabel = null; // Label (name) of the logged-in user
 let currentUserIsAdmin = false; // Is the logged-in user an admin?
+let currentUserAllowedSectors = []; // Sectors accessible to non-admin users
 
 auth.onAuthStateChanged(async (user) => {
   const overlay = document.getElementById('auth-overlay');
@@ -3736,13 +3809,15 @@ auth.onAuthStateChanged(async (user) => {
         return;
       }
 
-      // Set currentUserLabel and currentUserIsAdmin
+      // Set currentUserLabel, currentUserIsAdmin, and currentUserAllowedSectors
       if(user.email === 'a.mazoin@roanapura.fr'){
         currentUserLabel = 'antoine';
         currentUserIsAdmin = true;
+        currentUserAllowedSectors = []; // Admin sees all
       } else if(whitelistEntry){
         currentUserLabel = whitelistEntry.label;
         currentUserIsAdmin = whitelistEntry.role === 'admin';
+        currentUserAllowedSectors = whitelistEntry.allowedSectors || [];
       }
 
       // Access granted - load app data
