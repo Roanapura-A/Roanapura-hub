@@ -3451,24 +3451,8 @@ auth.onAuthStateChanged(async (user) => {
     overlay.classList.remove('open');
     document.body.classList.remove('auth-overlay-open');
 
-    // Initialize gapi.client for Calendar API with the access token
-    if(typeof gapi !== 'undefined' && window.calendarAccessToken){
-      console.log('[gapi] Initializing client with access token...');
-      gapi.load('client', () => {
-        gapi.client.init({
-          apiKey: 'AIzaSyBFnLg_c_eIW4vQvhXX2Ja7CugwCoZ8gTw',
-          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest']
-        }).then(() => {
-          // Set the access token for API calls
-          gapi.client.setToken({ access_token: window.calendarAccessToken });
-          console.log('[gapi] Client initialized successfully with access token');
-        }).catch(err => {
-          console.error('[gapi] Init failed:', err);
-        });
-      });
-    } else {
-      console.log('[gapi] Waiting for access token...');
-    }
+    // Note: We use REST API directly with fetch(), no need to initialize gapi.client
+    console.log('[Calendar] Ready to sync — using REST API with access token');
   } else {
     currentUser = null;
     googleUser = null;
