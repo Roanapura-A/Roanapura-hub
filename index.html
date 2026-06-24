@@ -1174,6 +1174,15 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .admin-item-btn{padding:4px 10px;background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;border-radius:1px;transition:background .2s}
 .admin-item-btn:hover{background:var(--red-bright)}
 
+.admin-toggle{
+  position:fixed;bottom:20px;right:20px;z-index:99;
+  width:50px;height:50px;border-radius:50%;
+  background:var(--red);border:none;color:#fff;font-size:24px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.4);
+  transition:background .2s, transform .2s;
+}
+.admin-toggle:hover{background:var(--red-bright);transform:scale(1.1)}
+
 </style>
 </head>
 <body>
@@ -1455,9 +1464,13 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 </div>
 
 <!-- ========== ADMIN PANEL ========== -->
+<button class="admin-toggle" id="admin-toggle" onclick="toggleAdminPanel()" style="display:none">⚙</button>
 <div class="admin-panel" id="admin-panel" style="display:none">
   <div class="admin-card">
-    <div class="admin-title">// ADMIN PANEL</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="admin-title">// ADMIN PANEL</div>
+      <button style="margin-left:auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px" onclick="toggleAdminPanel()">✕</button>
+    </div>
 
     <!-- Invite Form -->
     <div class="admin-section">
@@ -3485,18 +3498,29 @@ async function deleteTaskWithCalendar(sectorId, taskId){
 }
 
 // --------- Admin Panel Functions ---------
+function toggleAdminPanel(){
+  const panel = document.getElementById('admin-panel');
+  const toggle = document.getElementById('admin-toggle');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  toggle.textContent = isOpen ? '⚙' : '✕';
+}
+
 async function renderAdminPanel(){
   const panel = document.getElementById('admin-panel');
-  if(!panel) return;
+  const toggle = document.getElementById('admin-toggle');
+  if(!panel || !toggle) return;
 
   const isAdmin = currentUser && (currentUser.email === 'a.mazoin@roanapura.fr' ||
     (await db.ref(`meta/whitelist/${currentUser.uid}/role`).once('value')).val() === 'admin');
 
   if(!isAdmin){
     panel.style.display = 'none';
+    toggle.style.display = 'none';
     return;
   }
 
+  toggle.style.display = 'block';
   panel.style.display = 'block';
 
   // Render pending invites
@@ -3633,7 +3657,12 @@ async function changeActiveDataUid(uid){
   state = await load();
   stateLoaded = true;
 
-  renderHome(); // Re-render with new data
+  // Find which view is currently active and re-render it
+  const activeView = document.querySelector('.view.active');
+  if(activeView.id === 'view-home') renderHome();
+  else if(activeView.id === 'view-sector') renderSector();
+  else if(activeView.id === 'view-planning') renderPlanning();
+  else if(activeView.id === 'view-ritual') ritualGoStep(1);
 }
 
 // --------- Initialize on startup ---------
