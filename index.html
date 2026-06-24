@@ -3548,7 +3548,12 @@ function canSeeTask(task){
 }
 
 function canUserSeeSector(sectorId){
-  // Admin can see all sectors
+  // If viewing someone else's data, check THEIR permissions
+  if(activeDataUid && activeDataUid !== currentUser.uid){
+    return activeUserAllowedSectors.includes(sectorId);
+  }
+
+  // If admin viewing own data, see all sectors
   if(currentUserIsAdmin) return true;
 
   // Non-admin: check if sector is in their allowedSectors
@@ -3790,6 +3795,15 @@ async function changeActiveDataUid(uid){
   activeDataUid = uid;
   console.log('[Admin] activeDataUid changed to', uid.substring(0,8)+'...');
 
+  // Load allowed sectors for this user
+  if(uid !== currentUser.uid){
+    const entry = await db.ref(`meta/whitelist/${uid}`).once('value');
+    const whitelistEntry = entry.val();
+    activeUserAllowedSectors = whitelistEntry ? (whitelistEntry.allowedSectors || []) : [];
+  } else {
+    activeUserAllowedSectors = currentUserAllowedSectors;
+  }
+
   // Reload state for the new user
   stateLoaded = false;
   state = await load();
@@ -3811,6 +3825,7 @@ let activeDataUid = null;
 let currentUserLabel = null; // Label (name) of the logged-in user
 let currentUserIsAdmin = false; // Is the logged-in user an admin?
 let currentUserAllowedSectors = []; // Sectors accessible to non-admin users
+let activeUserAllowedSectors = []; // Sectors accessible to the user we're viewing (activeDataUid)
 
 auth.onAuthStateChanged(async (user) => {
   const overlay = document.getElementById('auth-overlay');
