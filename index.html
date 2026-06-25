@@ -679,18 +679,6 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
   letter-spacing:2px;text-align:center;
 }
 
-/* Side business custom block */
-.side-streams{
-  display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:24px;
-}
-.stream-card{
-  padding:14px;background:var(--surface-2);border:1px solid var(--border);
-  border-left:2px solid var(--gold);border-radius:2px;
-}
-.stream-name{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:1px;margin-bottom:4px}
-.stream-meta{font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:1px}
-.stream-revenue{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--gold);margin-top:6px}
-
 /* ============================================================
    HOME BACKGROUND IMAGE
    ============================================================ */
@@ -1305,12 +1293,6 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
         <span>TÂCHES <b id="s-tasks-total">0</b></span>
         <span>MISSIONS <b id="s-missions-done">0</b></span>
       </div>
-    </div>
-
-    <!-- Side business streams (only shown for side) -->
-    <div id="side-streams-wrap" style="display:none">
-      <div class="section-title">Flux de Revenus <span class="count mono">SIDE</span></div>
-      <div class="side-streams" id="side-streams"></div>
     </div>
 
     <!-- Active mission slot -->
@@ -2060,27 +2042,6 @@ function renderSector(){
   document.getElementById('sector-name').innerHTML = `<span class="accent">//</span> ${s.name.toUpperCase()}`;
   document.getElementById('sector-id').textContent = '// '+s.tag;
   document.getElementById('sector-id-foot').textContent = s.tag;
-
-  const streamsWrap = document.getElementById('side-streams-wrap');
-  if(sd.streams){
-    streamsWrap.style.display='block';
-    const sw = document.getElementById('side-streams');
-    sw.innerHTML='';
-    sd.streams.forEach((st, idx)=>{
-      const sum = (sd.revenues||[]).filter(r=>r.label===st.name).reduce((s,r)=>s+(r.amount||0),0);
-      const card = document.createElement('div');
-      card.className='stream-card';
-      card.innerHTML = `
-        <div class="stream-name">${escapeHtml(st.name)}</div>
-        <div class="stream-meta">${escapeHtml(st.note||'')}</div>
-        <div class="stream-revenue">${sum.toLocaleString('fr-FR')}€</div>
-      `;
-      card.onclick=()=>editStream(idx);
-      sw.appendChild(card);
-    });
-  } else {
-    streamsWrap.style.display='none';
-  }
 
   const tasksTotal = sd.tasks.filter(t=>!t.done && canSeeTask(t)).length;
   document.getElementById('s-tasks-total').textContent = tasksTotal;
