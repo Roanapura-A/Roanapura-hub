@@ -1817,22 +1817,6 @@ function bumpStreak(){
 }
 function streakDays(){ return state.streak.count || 0; }
 
-// --------- Routing ---------
-function go(view, sectorId=null){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  if(view==='home'){
-    document.getElementById('view-home').classList.add('active');
-    renderHome();
-  } else if(view==='sector'){
-    currentSector = sectorId;
-    document.getElementById('view-sector').classList.add('active');
-    renderSector();
-  } else if(view==='ritual'){
-    document.getElementById('view-ritual').classList.add('active');
-    ritualGoStep(1);
-  }
-  window.scrollTo({top:0, behavior:'smooth'});
-}
 
 // --------- Daily log + ritual helpers ---------
 function todayLog(){
@@ -2207,11 +2191,21 @@ function toggleTaskDone(taskId, ev){
   save();
   renderSector();
 }
-function deleteTask(taskId){
+async function deleteTask(taskId){
   if(state.activeMission && state.activeMission.taskId===taskId) return;
   const sd = state.sectors[currentSector];
   sd.tasks = sd.tasks.filter(t=>t.id!==taskId);
   save();
+
+  // Delete from Firebase
+  const userRef = db.ref('users/' + (activeDataUid || currentUser.uid));
+  try {
+    await userRef.child('sectors').child(currentSector).child('tasks').child(taskId).remove();
+    console.log('[Task] Deleted from Firebase:', taskId);
+  } catch(e) {
+    console.error('[Task] Firebase delete failed:', e);
+  }
+
   renderSector();
 }
 
@@ -2412,198 +2406,6 @@ function renderRitualBanner(){
       <button class="btn amber" onclick="event.stopPropagation();go('ritual')">TERMINER →</button>
     `;
   }
-}
-
-function ritualGoStep(n){
-  document.querySelectorAll('#view-ritual .ritual-step').forEach((el,i)=>{
-    el.style.display = (i+1===n)?'block':'none';
-  });
-  document.querySelectorAll('#view-ritual .ritual-stepper .step').forEach((el,i)=>{
-    el.classList.toggle('active', (i+1)===n);
-    el.classList.toggle('done', (i+1)<n);
-  });
-  if(n===1) renderRitualStep1();
-  if(n===2) renderRitualStep2();
-  if(n===3) renderRitualStep3();
-}
-
-function renderRitualStep1(){
-  const log = todayLog();
-  const cm = log.completedMissions||[];
-  const am = log.abortedMissions||[];
-  const td = log.tasksDone||0;
-  const el = document.getElementById('ritual-step-1');
-  el.innerHTML = `
-    <div class="panel-title">// Étape 1 — Review du jour</div>
-    <div class="ritual-stats">
-      <div class="ritual-stat">
-        <div class="ritual-stat-label">Missions complétées</div>
-        <div class="ritual-stat-value ok">${cm.length}</div>
-      </div>
-      <div class="ritual-stat">
-        <div class="ritual-stat-label">Missions abandonnées</div>
-        <div class="ritual-stat-value red">${am.length}</div>
-      </div>
-      <div class="ritual-stat">
-        <div class="ritual-stat-label">Tâches complétées</div>
-        <div class="ritual-stat-value amber">${td}</div>
-      </div>
-    </div>
-    ${cm.length ? `
-      <div class="ritual-sub-title">// Missions accomplies</div>
-      <div class="ritual-list">
-        ${cm.map(m=>`
-          <div class="ritual-item ok">
-            <span class="ritual-item-tag">${getSectorMeta(m.sectorId)?.tag||''}</span>
-            <span class="ritual-item-name">${escapeHtml(m.name)}</span>
-            <span class="ritual-item-time">${formatTime(m.at)}</span>
-          </div>
-        `).join('')}
-      </div>` : '<div class="empty">Aucune mission complétée aujourd\'hui.</div>'}
-    ${am.length ? `
-      <div class="ritual-sub-title">// Missions abandonnées</div>
-      <div class="ritual-list">
-        ${am.map(m=>`
-          <div class="ritual-item warn">
-            <span class="ritual-item-tag">${getSectorMeta(m.sectorId)?.tag||''}</span>
-            <span class="ritual-item-name">${escapeHtml(m.name)}</span>
-            <span class="ritual-item-time">${formatTime(m.at)}</span>
-          </div>
-        `).join('')}
-      </div>` : ''}
-    <div class="ritual-actions">
-      <button class="btn primary" onclick="ritualGoStep(2)">Continuer →</button>
-    </div>
-  `;
-}
-
-function renderRitualStep2(){
-  const tom = getTomorrowStr();
-  const allTasks = [];
-  SECTORS.forEach(s=>{
-    state.sectors[s.id].tasks.filter(t=>!t.done).forEach(t=>{
-      allTasks.push(Object.assign({}, t, {sectorId:s.id, sectorMeta:s}));
-    });
-  });
-  allTasks.sort((a,b)=>{
-    const ap = a.plannedFor===tom?0:1;
-    const bp = b.plannedFor===tom?0:1;
-    if(ap!==bp) return ap-bp;
-    return a.q - b.q;
-  });
-  const el = document.getElementById('ritual-step-2');
-  el.innerHTML = `
-    <div class="panel-title">// Étape 2 — Préparer demain</div>
-    <div class="tiny muted" style="margin-bottom:18px">Sélectionne les tâches que tu veux engager demain et ajuste leur quadrant si besoin.</div>
-    <div class="ritual-list">
-      ${allTasks.length ? allTasks.map(t=>`
-        <div class="ritual-task ${t.plannedFor===tom?'picked':''}">
-          <div class="ritual-task-check" onclick="toggleTomorrow('${t.sectorId}','${t.id}')">${t.plannedFor===tom?'✓':''}</div>
-          <div class="ritual-task-body">
-            <div class="ritual-task-name">${escapeHtml(t.name)}</div>
-            <div class="ritual-task-meta">// ${t.sectorMeta.tag}${t.recur?' • ⟳ RÉCURRENT':''}</div>
-          </div>
-          <select class="ritual-task-q" onchange="changeTaskQ('${t.sectorId}','${t.id}',this.value)">
-            <option value="1" ${t.q===1?'selected':''}>Q1 — Urgent & Important</option>
-            <option value="2" ${t.q===2?'selected':''}>Q2 — Important</option>
-            <option value="3" ${t.q===3?'selected':''}>Q3 — À déléguer</option>
-            <option value="4" ${t.q===4?'selected':''}>Q4 — À éliminer</option>
-          </select>
-        </div>
-      `).join('') : '<div class="empty">Aucune tâche en attente — tout est nettoyé.</div>'}
-    </div>
-    <div class="ritual-sub-title" style="margin-top:24px">// Ajouter une tâche pour demain</div>
-    <div class="add-task">
-      <input id="ritual-new-name" type="text" placeholder="Nouvelle tâche pour demain..." />
-      <select id="ritual-new-sector">
-        ${SECTORS.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
-      </select>
-      <select id="ritual-new-q">
-        <option value="1">Q1</option>
-        <option value="2" selected>Q2</option>
-        <option value="3">Q3</option>
-        <option value="4">Q4</option>
-      </select>
-      <button class="add" onclick="ritualAddTask()">+ AJOUTER</button>
-    </div>
-    <div class="ritual-actions">
-      <button class="btn ghost" onclick="ritualGoStep(1)">← Retour</button>
-      <button class="btn primary" onclick="ritualGoStep(3)">Continuer →</button>
-    </div>
-  `;
-  const input = document.getElementById('ritual-new-name');
-  if(input) input.addEventListener('keydown', e=>{ if(e.key==='Enter') ritualAddTask(); });
-}
-
-function renderRitualStep3(){
-  const log = todayLog();
-  const tomCount = countTomorrowTasks();
-  const today = todayStr();
-  const alreadyDone = !!state.ritualHistory[today];
-  const el = document.getElementById('ritual-step-3');
-  el.innerHTML = `
-    <div class="panel-title">// Étape 3 — Valider</div>
-    <div style="font-size:15px;color:var(--text-2);line-height:1.7;margin-bottom:24px">
-      Tu t'apprêtes à clôturer la journée.<br><br>
-      <b style="color:var(--ok)">${log.completedMissions.length}</b> mission(s) complétée(s) —
-      <b style="color:var(--red-bright)">${log.abortedMissions.length}</b> abandonnée(s) —
-      <b style="color:var(--amber-bright)">${log.tasksDone}</b> tâche(s) terminée(s).<br>
-      <b style="color:var(--amber-bright)">${tomCount}</b> tâche(s) cadrée(s) pour demain.<br><br>
-      <em style="color:var(--text);font-style:normal">Le streak ne progresse que si tu valides ce rituel.</em>
-    </div>
-    ${alreadyDone ? `
-      <div class="ritual-validated">
-        <div class="ritual-validated-tag">✓ JOURNÉE DÉJÀ VALIDÉE</div>
-        <div class="tiny muted">Streak actuel : <b style="color:var(--text)">${streakDays()} jours</b></div>
-      </div>
-      <div class="ritual-actions">
-        <button class="btn ghost" onclick="ritualGoStep(2)">← Retour</button>
-        <button class="btn" onclick="go('home')">Retour au QG</button>
-      </div>
-    ` : `
-      <div class="ritual-actions">
-        <button class="btn ghost" onclick="ritualGoStep(2)">← Retour</button>
-        <button class="btn primary" onclick="validateRitual()">✓ VALIDER LA JOURNÉE</button>
-      </div>
-    `}
-  `;
-}
-
-function validateRitual(){
-  const today = todayStr();
-  if(state.ritualHistory[today]){
-    go('home'); return;
-  }
-  state.ritualHistory[today] = true;
-  bumpStreak();
-  save();
-
-  const r = document.getElementById('reward');
-  document.getElementById('reward-title').textContent = '+1 STREAK';
-  document.getElementById('reward-sub').textContent = `JOURNÉE VALIDÉE // ${streakDays()} JOURS CONSÉCUTIFS`;
-  r.classList.add('open');
-  const text = r.querySelector('.reward-text');
-  const sparks = [];
-  for(let i=0;i<22;i++){
-    const s=document.createElement('div');
-    s.className='spark';
-    const angle = (Math.PI*2/22)*i + Math.random()*0.4;
-    const dist = 120+Math.random()*180;
-    s.style.left='50%'; s.style.top='50%';
-    s.style.background = Math.random()>.5 ? 'var(--ok)' : 'var(--amber-bright)';
-    text.appendChild(s);
-    sparks.push(s);
-    requestAnimationFrame(()=>{
-      s.style.transition='transform 700ms cubic-bezier(.2,.7,.2,1), opacity 700ms';
-      s.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
-      s.style.opacity='0';
-    });
-  }
-  setTimeout(()=>{
-    r.classList.remove('open');
-    sparks.forEach(s=>s.remove());
-    go('home');
-  }, 1400);
 }
 
 function toggleTomorrow(sectorId, taskId){
@@ -2874,34 +2676,6 @@ function updateRevenueAccordion(){
   if(btn) btn.classList.remove('open');
 }
 
-// --------- One-shot localStorage → Firebase injection ---------
-async function injectLocalData(){
-  if(!currentUser){
-    console.warn('[Inject] Utilisateur non authentifié — injection annulée.');
-    return false;
-  }
-  const userRef = db.ref('users/'+(activeDataUid || currentUser.uid));
-  const flagRef = db.ref('users/'+(activeDataUid || currentUser.uid)+'/_dataInjected');
-  try{
-    const flagSnap = await flagRef.once('value');
-    if(flagSnap.val()){
-      console.log('[Inject] Flag _dataInjected déjà présent — skip.');
-      return false;
-    }
-    const injectData = JSON.parse(`{"caTarget":5000,"caNow":200,"createdAt":1778695647002,"activeMission":null,"sectors":{"marketing":{"tasks":[{"id":"t_mq4wxsyd_gy7nk","name":"analyse des pubs erwan","q":1,"recur":false,"done":true,"createdAt":1780905140437},{"id":"t_mq7uqj75_xo7m5","name":"Préparer des Comparatif de top player","q":1,"recur":false,"done":true,"createdAt":1781082840497},{"id":"t_mq7ur13q_ioebv","name":"Tout basculer sur une seule page + un seul adgroup","q":1,"recur":false,"done":true,"createdAt":1781082863702},{"id":"t_mq7usg5f_h0ytm","name":"Préparer les questions / messages et contacter les insiders","q":1,"recur":false,"done":false,"createdAt":1781082929859,"plannedFor":"2026-06-12"}],"streams":null,"missionsDone":25,"revenues":[{"id":"r_mp5sb8ce_gco","amount":200,"date":"2026-05-07","label":"Meta ads Erwan Cuabos","createdAt":1778781052671}]},"agents":{"tasks":[{"id":"t_mpk84x26_z4mok","name":"Déterminer mon offre, pour qui, qu'est-ce que ça aide à faire et comment","q":1,"recur":false,"done":true,"plannedFor":"2026-05-25","createdAt":1779654158430},{"id":"t_mplp4slt_hnjb9","name":"Étude de marché - Rechercher les problèmes dont se plaignent les coiffeurs","q":1,"recur":false,"done":true,"plannedFor":"2026-05-26","createdAt":1779743172305},{"id":"t_mplp7t87_lqulk","name":"Étude de marché - Chercher des forum, groupe facebook, subreddit ou linkedin de coiffeurs","q":1,"recur":false,"done":true,"plannedFor":"2026-05-26","createdAt":1779743313079},{"id":"t_mplp8n9v_wia7z","name":"Étude de marché - Trouver des vidéos youtubes type storytime","q":1,"recur":false,"done":true,"plannedFor":"2026-05-26","createdAt":1779743352019},{"id":"t_mplp9k0s_hpe3g","name":"Fonctionnalités restantes pour Elite","q":2,"recur":false,"done":true,"plannedFor":"2026-05-26","createdAt":1779743394460},{"id":"t_mplp9w62_df2cy","name":"Contacter Alexandre","q":2,"recur":false,"done":true,"plannedFor":"2026-05-26","createdAt":1779743410202},{"id":"t_mpn2uw80_chybu","name":"Analyse de ma séquence de prospection","q":1,"recur":false,"done":true,"plannedFor":"2026-05-28","createdAt":1779826691233},{"id":"t_mpn2v9bl_iapy0","name":"Amélioration de ma séquence de prospection","q":1,"recur":false,"done":true,"plannedFor":"2026-06-02","createdAt":1779826708209},{"id":"t_mpn2wc4v_oq3gu","name":"Préparer un nouveau WWP pour mon site","q":2,"recur":false,"done":false,"plannedFor":"2026-05-29","createdAt":1779826758511},{"id":"t_mpqp8l9d_abj3v","name":"Market research coiffeurs","q":1,"recur":false,"done":true,"createdAt":1780045680289},{"id":"t_mpw8l4ef_ebdnd","name":"15 nouveaux prospects","q":1,"recur":false,"done":true,"createdAt":1780380508551},{"id":"t_mpyjc531_faycg","name":"Leads email","q":1,"recur":false,"done":true,"plannedFor":"2026-06-04","createdAt":1780519497661},{"id":"t_mq00im6b_vpwkd","name":"Régler le problème des emails","q":1,"recur":false,"done":true,"plannedFor":"2026-06-05","createdAt":1780608819395},{"id":"t_mq00ix4q_wyeqk","name":"leads","q":1,"recur":false,"done":true,"plannedFor":"2026-06-05","createdAt":1780608833594},{"id":"t_mq00j6zt_v7s7f","name":"RDV Isa","q":1,"recur":false,"done":true,"plannedFor":"2026-06-05","createdAt":1780608846377},{"id":"t_mq6918ll_l3zjh","name":"Nouveaux leads","q":2,"recur":false,"done":true,"createdAt":1780985922249},{"id":"t_mq7ut16e_5a8tj","name":"Dessiner le premier plan de l'agent ia","q":1,"recur":false,"done":false,"createdAt":1781082957110,"plannedFor":"2026-06-12"},{"id":"t_mq89rcpj_i1gg7","name":"Préparer la structure du airtable","q":1,"recur":false,"done":true,"plannedFor":"2026-06-11","createdAt":1781108072983},{"id":"t_mq9zhg5b_qs236","name":"APPELER 5 salons","q":1,"recur":false,"done":false,"plannedFor":"2026-06-12","createdAt":1781211747071},{"id":"t_mq9zhqgv_2arby","name":"Prospection email","q":1,"recur":false,"done":false,"plannedFor":"2026-06-12","createdAt":1781211760447},{"id":"t_mq9zjx1i_xrpmd","name":"Finir la feuille Airtable","q":1,"recur":false,"done":true,"plannedFor":"2026-06-12","createdAt":1781211862279}],"streams":null,"missionsDone":29,"revenues":[]},"side":{"tasks":[{"id":"t_mpocys61_0bb44","name":"Contacter gaby","q":3,"recur":false,"done":true,"plannedFor":"2026-05-28","createdAt":1779904134937},{"id":"t_mq00jmxd_76ih4","name":"Débrousaillage Michèle","q":1,"recur":false,"done":true,"plannedFor":"2026-06-05","createdAt":1780608867025}],"streams":[{"name":"Affiliation","revenue":0,"note":"Programmes en cours"},{"name":"Templates / Produits","revenue":0,"note":"Catalogue Notion"},{"name":"Contenus / Audience","revenue":0,"note":"Newsletter & X"}],"missionsDone":7,"revenues":[{"id":"r_mp5s782z_v4v","amount":60,"date":"2026-04-19","label":"Débrousaillage Christelle roux 1","createdAt":1778780865707},{"id":"r_mp5s82vj_r21","amount":20,"date":"2026-04-17","label":"Tonte de pelouse Michelle Mazoin","createdAt":1778780905615},{"id":"r_mp5s8tnw_yd0","amount":50,"date":"2026-05-30","label":"débrousaillage christelle roux 2","createdAt":1778780940332},{"id":"r_mp5sadcj_aa4","amount":40,"date":"2026-05-13","label":"Tonte de pelouse Michelle Mazoin","createdAt":1778781012499},{"id":"r_mp7cxubh_xzu","amount":100,"date":"2026-05-15","label":"Déroussaillage stéphane Mazoin","createdAt":1778876166077},{"id":"r_mph3nowp_5c5","amount":50,"date":"2026-05-22","label":"Claudine Benoist Désherbage","createdAt":1779465237721},{"id":"r_mpqp5va6_y0u","amount":30,"date":"2026-05-29","label":"Débrousaillage enclos Christelle roux","createdAt":1780045553311},{"id":"r_mq7um83w_bz1","amount":30,"date":"2026-06-06","label":"michèle débroussaillage","createdAt":1781082639500},{"id":"r_mq897l4q_owy","amount":30,"date":"2026-06-10","label":"jardin michèle","createdAt":1781107150778}]}},"stats":{"tasksDone":67,"missionsDone":61,"missionsAborted":0},"streak":{"lastActiveDate":"2026-06-11","count":2,"history":{"2026-05-13":true,"2026-05-14":true,"2026-05-15":true,"2026-05-16":true,"2026-05-17":true,"2026-05-18":true,"2026-05-19":true,"2026-05-20":true,"2026-05-21":true,"2026-05-24":true,"2026-05-25":true,"2026-05-26":true,"2026-05-27":true,"2026-05-28":true,"2026-05-31":true,"2026-06-01":true,"2026-06-03":true,"2026-06-04":true,"2026-06-10":true,"2026-06-11":true}},"ritualHistory":{"2026-05-13":true,"2026-05-14":true,"2026-05-15":true,"2026-05-16":true,"2026-05-17":true,"2026-05-18":true,"2026-05-19":true,"2026-05-20":true,"2026-05-21":true,"2026-05-24":true,"2026-05-25":true,"2026-05-26":true,"2026-05-27":true,"2026-05-28":true,"2026-05-31":true,"2026-06-01":true,"2026-06-03":true,"2026-06-04":true,"2026-06-10":true,"2026-06-11":true},"weeklyReviews":{"2026-05-24":{"good":"J'ai identifié ce qui était mon problème principal\\nJ'ai montré mes compétences à Alexandre, et je continue d'avancer là dessus\\nj'ai lancé les pubs d'erwan","bad":"Le délais de prise de décision est trop grand, et je garde toujours un pied dans la porte pour fuir.","why":"Parce que c'est protecteur, c'est rassurant. C'est fini, je dois y aller skin in the game, et n'avoir pas d'autre solution que de réussir","adjustments":["Pas de changement de trajectoire avant le dimanche","Une prise de décision entammée dans la journée doit être terminée le soir."],"objectives":[{"text":"Avoir une offre, une clientèle et un problème clair","sector":"agents"},{"text":"5 nouveaux prospects pour erwan","sector":"marketing"},{"text":"Recontacter Alexandre pour lui dire que j'i déjà le plan n8n de ses agents","sector":"agents"}],"createdAt":1779654725271},"2026-05-31":{"good":"J'ai un plan d'action plutôt clair pour L'agence d'agent ia\\nLes pubs sont relancées et il y a eu un prospect.\\nLes problèmes de mesure et de conversion ont été réglés.","bad":"Ma gestion du temps est catastrophique.\\nJe ne planifie pas mes journées, pas précisément avec le calendrier\\nCe qui devait être mesuré avec contentsquare sur la page d'erwan a été biaisé à cause d'une erreur technique","why":"Je ne suis pas assez précis avec ce que je veux faire, donc je laisse beaucoup d'entropie se mettre au milieu, et rien n'est fait.","adjustments":["Remplir mon calendrier tout les jours pour le lendemain"],"objectives":[{"text":"3 Conversion","sector":"marketing"},{"text":"Market research complete à nouveau","sector":"marketing"},{"text":"2 RDV avec des coiffeurs","sector":"agents"}],"createdAt":1780293332754}}}`);
-    injectData._dataInjected = true;
-    await userRef.set(injectData);
-    state = applyShape(injectData);
-    console.log('[Inject] OK — données anciennes injectées dans users/'+currentUser.uid);
-    alert('Anciennes données localStorage injectées avec succès dans Firebase.');
-    return true;
-  }catch(e){
-    console.error('[Inject] ÉCHEC', e);
-    alert('Injection échouée : '+(e.message||e.code||e));
-    return false;
-  }
-}
-
 // --------- Auth ---------
 function signInWithGoogle(){
   auth.signInWithPopup(googleProvider).then(result=>{
@@ -2935,35 +2709,6 @@ function signOut(){
 
 // REMOVED: This listener is now merged into the unified one below
 
-// --------- Revenue Accordion ---------
-function toggleRevenueAccordion(){
-  const list = document.getElementById('revenue-list');
-  const btn = document.getElementById('revenue-accordion-btn');
-  if(!list || !btn) return;
-  const isOpen = list.style.display !== 'none';
-  list.style.display = isOpen ? 'none' : 'block';
-  btn.classList.toggle('open');
-}
-
-function updateRevenueAccordion(){
-  const sd = state.sectors[currentSector];
-  const revs = (sd.revenues||[]);
-  const total = revs.reduce((s,r)=>s+(r.amount||0), 0);
-  const count = revs.length;
-  const label = document.getElementById('revenue-accordion-label');
-  if(label){
-    label.textContent = count > 0
-      ? `${total.toLocaleString('fr-FR')}€ (${count} ${count>1?'entrées':'entrée'})`
-      : 'Aucun revenu';
-  }
-  const btn = document.getElementById('revenue-accordion-btn');
-  if(btn) btn.style.display = count > 0 ? 'flex' : 'none';
-  // Fermer l'accordéon
-  const list = document.getElementById('revenue-list');
-  if(list) list.style.display = 'none';
-  if(btn) btn.classList.remove('open');
-}
-
 // --------- Routing ---------
 function go(view, sectorId=null){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -2973,6 +2718,7 @@ function go(view, sectorId=null){
   } else if(view==='sector'){
     currentSector = sectorId;
     document.getElementById('view-sector').classList.add('active');
+    renderSector();
   } else if(view==='ritual'){
     document.getElementById('view-ritual').classList.add('active');
     ritualGoStep(1);
@@ -3272,35 +3018,6 @@ function renderRitualStep4(){
   `;
 }
 
-function toggleTomorrow(sectorId, taskId){
-  const t = findTask(sectorId, taskId);
-  if(!t) return;
-  const tom = getTomorrowStr();
-  t.plannedFor = (t.plannedFor === tom) ? null : tom;
-  save();
-  renderRitualStep2();
-}
-
-function countTomorrowTasks(){
-  const tom = getTomorrowStr();
-  let n=0;
-  SECTORS.forEach(s=>{
-    state.sectors[s.id].tasks.forEach(t=>{ if(t.plannedFor===tom && !t.done) n++; });
-  });
-  return n;
-}
-
-function todayLog(){
-  const t = todayStr();
-  if(!state.dailyLog[t]) state.dailyLog[t] = {completedMissions:[], abortedMissions:[], tasksDone:0};
-  return state.dailyLog[t];
-}
-
-function getTomorrowStr(){
-  const d=new Date(); d.setDate(d.getDate()+1);
-  return dateStr(d);
-}
-
 function validateRitual(){
   const today = todayStr();
   if(state.ritualHistory[today]){
@@ -3310,40 +3027,6 @@ function validateRitual(){
   bumpStreak();
   save();
   go('home');
-}
-
-function bumpStreak(){
-  const today = todayStr();
-  if(state.streak.lastActiveDate === today) return;
-  const y = new Date(); y.setDate(y.getDate()-1);
-  const yStr = dateStr(y);
-  if(state.streak.lastActiveDate === yStr){
-    state.streak.count += 1;
-  } else if(state.streak.lastActiveDate === null){
-    state.streak.count = 1;
-  } else {
-    state.streak.count = 1;
-  }
-  state.streak.lastActiveDate = today;
-  state.streak.history[today] = true;
-}
-
-function findTask(sectorId, taskId){
-  return state.sectors[sectorId].tasks.find(t=>t.id===taskId);
-}
-
-function dateStr(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-function todayStr(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-function save(){
-  try{ localStorage.setItem('roanapura.v1', JSON.stringify(state)); }
-  catch(e){ console.warn('save failed',e); }
 }
 
 // --------- Google Calendar Integration ---------
@@ -3481,10 +3164,6 @@ async function calendarDeleteEvent(task){
     console.warn('[Calendar] Delete error', e);
   }
   return false;
-}
-
-function getSectorMeta(id){
-  return SECTORS.find(s=>s.id===id);
 }
 
 async function deleteTaskWithCalendar(sectorId, taskId){
@@ -3846,8 +3525,6 @@ auth.onAuthStateChanged(async (user) => {
       stateLoaded = false;
       state = await load();
       stateLoaded = true;
-      const injected = await injectLocalData();
-      if(injected) state = await load();
 
       const opEl = document.getElementById('op-name');
       if(opEl) opEl.textContent = (user.displayName || user.email || 'OPERATOR').toUpperCase();
