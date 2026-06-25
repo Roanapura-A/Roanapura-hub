@@ -1922,9 +1922,19 @@ function openRevenueModal(prefillLabel){
 
 // --------- Render: Home ---------
 function renderHome(){
-  // Hide financial info for non-admins
+  // Ensure tasks are arrays, not objects (Firebase sometimes returns objects)
+  SECTORS.forEach(s => {
+    if(!Array.isArray(state.sectors[s.id].tasks) && typeof state.sectors[s.id].tasks === 'object'){
+      state.sectors[s.id].tasks = Object.values(state.sectors[s.id].tasks || {});
+    }
+  });
+
+  // Hide financial info for non-admins, or when viewing non-admin users
+  const viewingOtherUser = activeDataUid && activeDataUid !== currentUser.uid;
+  const shouldHideFinances = !currentUserIsAdmin || (viewingOtherUser && activeUserAllowedSectors.length > 0);
+
   const objectiveEl = document.querySelector('.objective');
-  if(objectiveEl) objectiveEl.style.display = currentUserIsAdmin ? 'block' : 'none';
+  if(objectiveEl) objectiveEl.style.display = shouldHideFinances ? 'none' : 'block';
 
   state.caNow = getCaNow();
   const compNow = getCompNow();
@@ -2048,11 +2058,14 @@ function renderSector(){
   document.getElementById('s-tasks-count').textContent = tasksTotal+' ITEMS';
   document.getElementById('s-missions-done').textContent = sd.missionsDone||0;
 
-  // Revenues (hidden for non-admins)
-  const revAccordion = document.querySelector('#revenue-accordion');
-  if(revAccordion) revAccordion.style.display = currentUserIsAdmin ? 'block' : 'none';
+  // Revenues (hidden for non-admins, or when viewing non-admin users)
+  const viewingOtherUser = activeDataUid && activeDataUid !== currentUser.uid;
+  const shouldHideFinances = !currentUserIsAdmin || (viewingOtherUser && activeUserAllowedSectors.length > 0);
 
-  if(currentUserIsAdmin){
+  const revAccordion = document.querySelector('#revenue-accordion');
+  if(revAccordion) revAccordion.style.display = shouldHideFinances ? 'none' : 'block';
+
+  if(!shouldHideFinances){
     const revs = (sd.revenues||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'') || b.createdAt-a.createdAt);
     const revTotal = revs.reduce((s,r)=>s+(r.amount||0), 0);
     document.getElementById('s-rev-total').textContent = revTotal.toLocaleString('fr-FR')+'€';
