@@ -1924,8 +1924,8 @@ function openRevenueModal(prefillLabel){
 function renderHome(){
   // Ensure tasks are arrays, not objects (Firebase sometimes returns objects)
   SECTORS.forEach(s => {
-    if(!Array.isArray(state.sectors[s.id].tasks) && typeof state.sectors[s.id].tasks === 'object'){
-      state.sectors[s.id].tasks = Object.values(state.sectors[s.id].tasks || {});
+    if(state.sectors[s.id].tasks && !Array.isArray(state.sectors[s.id].tasks) && typeof state.sectors[s.id].tasks === 'object'){
+      state.sectors[s.id].tasks = Object.values(state.sectors[s.id].tasks);
     }
   });
 
