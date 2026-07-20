@@ -1201,6 +1201,8 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 .mail-date{font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0}
 .mail-actions{display:none;gap:6px;margin-top:10px;flex-wrap:wrap}
 .mail-item.open .mail-actions{display:flex}
+.mail-snippet{display:none;font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.5}
+.mail-item.open .mail-snippet{display:block}
 .mail-btn{
   font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--text-2);
   border:1px solid var(--border-strong);padding:4px 9px;border-radius:1px;transition:color .2s,border-color .2s;
@@ -3690,7 +3692,9 @@ async function rpCall(path, opts){
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   if(!res.ok) throw new Error('HTTP '+res.status);
-  const data = await res.json();
+  // Corps vide (ex: table/dossier vide côté n8n) → liste vide, pas une erreur
+  const txt = await res.text();
+  const data = txt ? JSON.parse(txt) : [];
   if(method==='GET'){
     try{ localStorage.setItem(cacheKey, JSON.stringify({at:Date.now(), data:data})); }catch(e){}
   }
@@ -3700,7 +3704,10 @@ function rpInvalidate(path){ try{ localStorage.removeItem('rp_cache_'+path); }ca
 
 // --------- V2 : Mails ---------
 let mailsData = [];
-function mailIsUnread(m){ return Array.isArray(m.labelIds) && m.labelIds.includes('UNREAD'); }
+function mailIsUnread(m){
+  if(Array.isArray(m.labels)) return m.labels.some(l=>l && l.id==='UNREAD');
+  return Array.isArray(m.labelIds) && m.labelIds.includes('UNREAD');
+}
 function updateMailsBadge(){
   const b = document.getElementById('mails-badge');
   if(!b) return;
@@ -3730,17 +3737,22 @@ async function renderMails(force){
     if(st) st.textContent = mailsData.filter(mailIsUnread).length + ' NON LU(S)';
     if(!mailsData.length){ box.innerHTML = '<div class="empty">Boîte vide.</div>'; return; }
     box.innerHTML = mailsData.map(m=>{
-      const fromRaw = (m.from && (m.from.text || (m.from.value && m.from.value[0] && (m.from.value[0].name || m.from.value[0].address)))) || '—';
-      const d = m.date ? new Date(m.date) : null;
+      // Forme réelle renvoyée par Gmail via n8n : From, Subject, snippet, internalDate (ms), labels [{id,name}]
+      const fromRaw = (m.From || (m.from && (m.from.text || (m.from.value && m.from.value[0] && (m.from.value[0].name || m.from.value[0].address)))) || '—').replace(/<[^>]*>/g, '').trim() || '—';
+      const ts = m.internalDate ? Number(m.internalDate) : (m.date ? Date.parse(m.date) : null);
+      const d = ts ? new Date(ts) : null;
       const ds = d ? String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') : '';
+      const subject = m.Subject || m.subject || '(sans objet)';
+      const snippet = (m.snippet || '').replace(/[͏​­]/g, '').trim();
       return `
       <div class="mail-item ${mailIsUnread(m)?'unread':''}" id="mail-${m.id}" onclick="toggleMailOpen('${m.id}')">
         <div class="mail-head">
           ${mailIsUnread(m)?'<span class="mail-dot"></span>':''}
           <span class="mail-from">${escapeHtml(fromRaw)}</span>
-          <span class="mail-subject">${escapeHtml(m.subject||'(sans objet)')}</span>
+          <span class="mail-subject">${escapeHtml(subject)}</span>
           <span class="mail-date">${ds}</span>
         </div>
+        ${snippet?`<div class="mail-snippet">${escapeHtml(snippet.slice(0,180))}</div>`:''}
         <div class="mail-actions">
           <button class="mail-btn" onclick="mailAction('${m.id}','read', event)">✓ LU</button>
           <button class="mail-btn" onclick="mailAction('${m.id}','archive', event)">ARCHIVER</button>
@@ -3767,7 +3779,10 @@ async function mailAction(id, action, ev){
   try{
     await rpCall('rp-mail-action', {method:'POST', body:{id:id, action:action}});
     const m = mailsData.find(x=>x.id===id);
-    if(action==='read' && m && Array.isArray(m.labelIds)) m.labelIds = m.labelIds.filter(l=>l!=='UNREAD');
+    if(action==='read' && m){
+      if(Array.isArray(m.labels)) m.labels = m.labels.filter(l=>!(l && l.id==='UNREAD'));
+      if(Array.isArray(m.labelIds)) m.labelIds = m.labelIds.filter(l=>l!=='UNREAD');
+    }
     if(action==='archive') mailsData = mailsData.filter(x=>x.id!==id);
     try{ localStorage.setItem('rp_cache_rp-mails-list', JSON.stringify({at:Date.now(), data:mailsData})); }catch(e){}
     updateMailsBadge();
