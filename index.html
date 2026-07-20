@@ -3732,7 +3732,7 @@ async function renderMails(force){
   try{
     if(force) rpInvalidate('rp-mails-list');
     const data = await rpCall('rp-mails-list');
-    mailsData = Array.isArray(data) ? data : [data];
+    mailsData = (Array.isArray(data) ? data : [data]).filter(x=>x && x.id);
     updateMailsBadge();
     if(st) st.textContent = mailsData.filter(mailIsUnread).length + ' NON LU(S)';
     if(!mailsData.length){ box.innerHTML = '<div class="empty">Boîte vide.</div>'; return; }
@@ -3824,7 +3824,7 @@ async function renderCrm(force){
   try{
     if(force) rpInvalidate('rp-crm-list');
     const data = await rpCall('rp-crm-list');
-    crmData = Array.isArray(data) ? data : [data];
+    crmData = (Array.isArray(data) ? data : [data]).filter(x=>x && x.id);
     if(st) st.textContent = crmData.length + ' DEAL(S)';
     const now = Date.now();
     const actifs = crmData.filter(d=>d.Statut && d.Statut!=='Perdu' && d.Statut!=='Client');
@@ -3994,7 +3994,7 @@ auth.onAuthStateChanged(async (user) => {
       // V2 : badge mails non-lus (chargement silencieux, admin uniquement)
       if(currentUserIsAdmin){
         rpCall('rp-mails-list').then(data=>{
-          mailsData = Array.isArray(data) ? data : [data];
+          mailsData = (Array.isArray(data) ? data : [data]).filter(x=>x && x.id);
           updateMailsBadge();
         }).catch(e=>console.warn('[Mails] badge non chargé', e));
       }
