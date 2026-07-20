@@ -1171,6 +1171,90 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
 }
 .admin-toggle:hover{background:var(--red-bright);transform:scale(1.1)}
 
+/* ============================================================
+   V2 — MAILS / CRM / DOCS
+   ============================================================ */
+.hub-badge{
+  display:inline-block;min-width:16px;padding:1px 5px;margin-left:6px;
+  background:var(--amber-bright);color:#0a0a0f;border-radius:8px;
+  font-size:10px;font-weight:700;vertical-align:middle;
+}
+.rp-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.rp-refresh{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--text-2);
+  border:1px solid var(--border-strong);padding:6px 12px;border-radius:1px;transition:color .2s,border-color .2s;
+}
+.rp-refresh:hover{color:var(--text);border-color:var(--border-glow)}
+.rp-status{font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:1px}
+
+.mail-item{
+  background:var(--surface);border:1px solid var(--border);
+  padding:12px 14px;margin-bottom:8px;border-radius:1px;
+  transition:border-color .2s;cursor:pointer;
+}
+.mail-item:hover{border-color:var(--border-strong)}
+.mail-item.unread{border-left:2px solid var(--amber-bright)}
+.mail-head{display:flex;align-items:center;gap:10px}
+.mail-dot{width:6px;height:6px;border-radius:50%;background:var(--amber-bright);flex-shrink:0}
+.mail-from{font-size:12px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.mail-subject{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.mail-date{font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0}
+.mail-actions{display:none;gap:6px;margin-top:10px;flex-wrap:wrap}
+.mail-item.open .mail-actions{display:flex}
+.mail-btn{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1px;color:var(--text-2);
+  border:1px solid var(--border-strong);padding:4px 9px;border-radius:1px;transition:color .2s,border-color .2s;
+}
+.mail-btn:hover{color:var(--text);border-color:var(--border-glow)}
+.mail-btn.red{color:var(--red-bright);border-color:var(--red)}
+.mail-btn.red:hover{color:#fff;background:var(--red)}
+.mail-reply-box{display:none;margin-top:10px}
+.mail-item.replying .mail-reply-box{display:block}
+.mail-reply-box textarea{
+  width:100%;min-height:80px;background:var(--surface-3);border:1px solid var(--border);
+  color:var(--text);padding:10px;font-size:12px;border-radius:1px;resize:vertical;
+}
+
+.crm-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.crm-metric{background:var(--surface);border:1px solid var(--border);padding:12px 14px;border-radius:1px}
+.crm-metric.red{border-left:2px solid var(--red)}
+.crm-metric.amber{border-left:2px solid var(--amber)}
+.crm-metric.gray{border-left:2px solid var(--gray)}
+.crm-metric-label{font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:2px;text-transform:uppercase}
+.crm-metric-value{font-size:20px;font-weight:600;color:var(--text);margin-top:4px}
+.crm-board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:24px}
+@media(max-width:1100px){.crm-board{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.crm-col-head{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;color:var(--text-3);
+  padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:8px;text-transform:uppercase;
+}
+.crm-col-head.s-prospect{border-color:var(--gray)}
+.crm-col-head.s-contact{border-color:var(--amber)}
+.crm-col-head.s-rdv{border-color:var(--amber-bright)}
+.crm-col-head.s-propal{border-color:var(--red)}
+.crm-col-head.s-client{border-color:var(--ok)}
+.crm-col-head.s-perdu{border-color:var(--mute)}
+.crm-card{
+  background:var(--surface);border:1px solid var(--border);padding:9px 10px;margin-bottom:6px;
+  border-radius:1px;cursor:pointer;transition:border-color .2s;
+}
+.crm-card:hover{border-color:var(--red)}
+.crm-card-name{font-size:12px;color:var(--text);margin-bottom:3px}
+.crm-card-meta{font-size:10px;color:var(--text-3);font-family:var(--font-mono)}
+.crm-card-meta .warn{color:var(--amber-bright)}
+.crm-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left}
+.crm-form label{display:block;font-family:var(--font-mono);font-size:9px;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase}
+.crm-form input,.crm-form select,.crm-form textarea{
+  width:100%;background:var(--surface-3);border:1px solid var(--border);color:var(--text);
+  padding:8px 10px;font-size:12px;border-radius:1px;
+}
+.crm-form .full{grid-column:1 / -1}
+
+.docs-panel{background:var(--surface);border:1px solid var(--border);padding:16px 18px;border-radius:1px}
+.docs-group-title{font-family:var(--font-mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin:10px 0 6px;text-transform:uppercase}
+.docs-link{display:block;font-size:12px;color:var(--text-2);padding:4px 0;text-decoration:none;transition:color .2s}
+.docs-link:hover{color:var(--text)}
+.linkedin-row{display:flex;gap:8px;margin-top:14px}
 </style>
 </head>
 <body>
@@ -1253,6 +1337,8 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
     <div style="margin-bottom:28px;display:flex;gap:10px">
       <button class="btn" onclick="openWeeklyReview()" style="background:var(--surface);border:1px solid var(--border);color:var(--amber-bright)">📊 BILAN HEBDOMADAIRE</button>
       <button class="btn" onclick="go('planning')" style="background:var(--surface);border:1px solid var(--border);color:var(--ok)">📅 PLANNING</button>
+      <button class="btn" id="btn-mails" onclick="go('mails')" style="background:var(--surface);border:1px solid var(--border);color:var(--text-2)">📨 MAILS<span class="hub-badge" id="mails-badge" style="display:none">0</span></button>
+      <button class="btn" id="btn-crm" onclick="go('crm')" style="background:var(--surface);border:1px solid var(--border);color:var(--red-bright)">🎯 CRM</button>
     </div>
 
     <!-- Global mission / streak panel -->
@@ -1322,6 +1408,7 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
         <option value="3">Q3 — À déléguer</option>
         <option value="4">Q4 — À éliminer</option>
       </select>
+      <input id="new-task-date" type="date" style="font-family:var(--font-mono);font-size:11px;padding:8px 10px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:1px;max-width:140px" title="Date planifiée (optionnel)" />
       <input id="new-task-time" type="time" placeholder="HH:MM" style="font-family:var(--font-mono);font-size:11px;padding:8px 10px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:1px;max-width:100px" title="Heure (optionnel)" />
       <input id="new-task-duration" type="number" min="0" step="15" placeholder="min" style="font-family:var(--font-mono);font-size:11px;padding:8px 10px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);border-radius:1px;max-width:70px" title="Durée en minutes (optionnel)" />
       <button class="recur-toggle" id="new-task-recur" type="button">⟳ Récurrent</button>
@@ -1405,6 +1492,44 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
     <div id="planning-content"></div>
 
     <div class="footer">// PLANNING // GLISSEZ-DÉPOSEZ POUR RÉORGANISER</div>
+  </section>
+
+  <!-- ============== MAILS VIEW (V2) ============== -->
+  <section class="view" id="view-mails">
+    <div class="back-bar">
+      <button class="back-btn" onclick="go('home')">← QG</button>
+      <div class="sector-title-bar">
+        <span class="id mono">// COMMS</span>
+        <span class="name"><span class="accent">//</span> MAILS</span>
+      </div>
+    </div>
+    <div class="rp-toolbar">
+      <button class="rp-refresh" onclick="renderMails(true)">↻ ACTUALISER</button>
+      <span class="rp-status" id="mails-status"></span>
+    </div>
+    <div id="mails-content"><div class="empty">Chargement…</div></div>
+    <div class="footer">// COMMS // GMAIL VIA N8N</div>
+  </section>
+
+  <!-- ============== CRM VIEW (V2) ============== -->
+  <section class="view" id="view-crm">
+    <div class="back-bar">
+      <button class="back-btn" onclick="go('home')">← QG</button>
+      <div class="sector-title-bar">
+        <span class="id mono">// CRM</span>
+        <span class="name"><span class="accent">//</span> PIPELINE</span>
+      </div>
+    </div>
+    <div class="rp-toolbar">
+      <button class="rp-refresh" onclick="renderCrm(true)">↻ ACTUALISER</button>
+      <button class="rp-refresh" style="color:var(--red-bright);border-color:var(--red)" onclick="openCrmForm(null)">+ NOUVEAU DEAL</button>
+      <span class="rp-status" id="crm-status"></span>
+    </div>
+    <div class="crm-metrics" id="crm-metrics"></div>
+    <div class="crm-board" id="crm-board"><div class="empty">Chargement…</div></div>
+    <div class="section-title">Docs — Arsenal</div>
+    <div class="docs-panel" id="docs-panel"><div class="empty">Chargement…</div></div>
+    <div class="footer">// CRM // AIRTABLE VIA N8N</div>
   </section>
 
 </main>
@@ -1674,7 +1799,13 @@ function applyShape(data){
     data.sectors[s.id].revenues = asArray(data.sectors[s.id].revenues);
   });
   if(!data.stats) data.stats={tasksDone:0,missionsDone:0,missionsAborted:0};
+  if(typeof data.stats.tasksDone!=='number') data.stats.tasksDone=0;
+  if(typeof data.stats.missionsDone!=='number') data.stats.missionsDone=0;
+  if(typeof data.stats.missionsAborted!=='number') data.stats.missionsAborted=0;
   if(!data.streak) data.streak={lastActiveDate:null,count:0,history:{}};
+  if(!data.streak.history || typeof data.streak.history!=='object') data.streak.history={};
+  if(typeof data.streak.count!=='number') data.streak.count=0;
+  if(data.streak.lastActiveDate===undefined) data.streak.lastActiveDate=null;
   if(!data.ritualHistory) data.ritualHistory={};
   if(!data.dailyLog) data.dailyLog={};
   if(!data.weeklyReviews) data.weeklyReviews={};
@@ -1694,15 +1825,42 @@ async function load(){
     const snap = await db.ref(path).once('value');
     console.log('[Firebase load] OK (données existantes : '+snap.exists()+')');
     const data = snap.val();
-    // Force conversion Firebase object → array pour tasks ET revenues de tous les secteurs
+    // Conversion Firebase object → array + MIGRATION : purge des clés héritées
+    // (anciennes sauvegardes sous clés numériques 0,1,2… jamais supprimées par
+    // le save() par-ID → tâches fantômes qui réapparaissent à chaque rechargement)
     if(data && data.sectors && typeof data.sectors==='object'){
+      const cleanupUpdates = {};
       Object.keys(data.sectors).forEach(sid=>{
         const sec = data.sectors[sid];
         if(sec && typeof sec==='object'){
-          if(sec.tasks && !Array.isArray(sec.tasks)) sec.tasks = Object.values(sec.tasks);
-          if(sec.revenues && !Array.isArray(sec.revenues)) sec.revenues = Object.values(sec.revenues);
+          ['tasks','revenues'].forEach(coll=>{
+            const raw = sec[coll];
+            if(raw && typeof raw==='object'){
+              const entries = Array.isArray(raw)
+                ? raw.map((v,i)=>[String(i),v]).filter(([,v])=>v)
+                : Object.entries(raw);
+              // Déduplique par id ; génère un id si absent (très vieilles entrées)
+              const byId = {};
+              entries.forEach(([k,v])=>{
+                if(!v || typeof v!=='object') return;
+                if(!v.id) v.id = (coll==='tasks'?'t_':'r_')+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+                byId[v.id] = v;
+              });
+              const needsMigration = entries.some(([k,v])=>!v || !v.id || k!==v.id) || entries.length!==Object.keys(byId).length;
+              if(needsMigration){
+                cleanupUpdates[path+'/sectors/'+sid+'/'+coll] = byId;
+                console.log('[Firebase load] Migration '+sid+'/'+coll+' : '+entries.length+' entrées → '+Object.keys(byId).length+' propres');
+              }
+              sec[coll] = Object.values(byId);
+            }
+          });
         }
       });
+      if(Object.keys(cleanupUpdates).length){
+        db.ref().update(cleanupUpdates)
+          .then(()=>console.log('[Firebase load] Nettoyage des clés héritées OK'))
+          .catch(e=>console.error('[Firebase load] Nettoyage échoué', e));
+      }
     }
     return applyShape(data);
   }catch(e){
@@ -1801,6 +1959,8 @@ function fmtDuration(ms){
 
 // --------- Streak ---------
 function bumpStreak(){
+  if(!state.streak) state.streak = {lastActiveDate:null,count:0,history:{}};
+  if(!state.streak.history || typeof state.streak.history!=='object') state.streak.history = {};
   const today = todayStr();
   if(state.streak.lastActiveDate === today) return;
   const y = new Date(); y.setDate(y.getDate()-1);
@@ -1822,7 +1982,12 @@ function streakDays(){ return state.streak.count || 0; }
 function todayLog(){
   const t = todayStr();
   if(!state.dailyLog[t]) state.dailyLog[t] = {completedMissions:[], abortedMissions:[], tasksDone:0};
-  return state.dailyLog[t];
+  // Firebase supprime les tableaux vides à la sauvegarde : on les restaure
+  const log = state.dailyLog[t];
+  if(!Array.isArray(log.completedMissions)) log.completedMissions = asArray(log.completedMissions);
+  if(!Array.isArray(log.abortedMissions)) log.abortedMissions = asArray(log.abortedMissions);
+  if(typeof log.tasksDone!=='number') log.tasksDone = 0;
+  return log;
 }
 function getTomorrowStr(){
   const d=new Date(); d.setDate(d.getDate()+1);
@@ -1919,6 +2084,12 @@ function renderHome(){
 
   const objectiveEl = document.querySelector('.objective');
   if(objectiveEl) objectiveEl.style.display = shouldHideFinances ? 'none' : 'block';
+
+  // V2 : Mails + CRM réservés à l'admin (données perso Antoine)
+  const btnMails = document.getElementById('btn-mails');
+  const btnCrm = document.getElementById('btn-crm');
+  if(btnMails) btnMails.style.display = currentUserIsAdmin ? '' : 'none';
+  if(btnCrm) btnCrm.style.display = currentUserIsAdmin ? '' : 'none';
 
   state.caNow = getCaNow();
   const compNow = getCompNow();
@@ -2152,6 +2323,7 @@ async function addTask(){
   const name = document.getElementById('new-task-name').value.trim();
   if(!name) return;
   const q = parseInt(document.getElementById('new-task-q').value,10);
+  const plannedFor = document.getElementById('new-task-date').value || null;
   const startTime = document.getElementById('new-task-time').value || null;
   const duration = document.getElementById('new-task-duration').value ? parseInt(document.getElementById('new-task-duration').value,10) : null;
 
@@ -2160,11 +2332,16 @@ async function addTask(){
 
   const task = {
     id:uid(), name, q, recur:recurChecked, done:false, createdAt:Date.now(),
-    startTime, duration, assignedTo
+    plannedFor, startTime, duration, assignedTo
   };
   state.sectors[currentSector].tasks.push(task);
+  // Sync Google Calendar si date + heure renseignées
+  if(plannedFor && startTime){
+    task.calendarEventId = await calendarCreateEvent(Object.assign({}, task, {sectorId:currentSector}));
+  }
   save();
   document.getElementById('new-task-name').value='';
+  document.getElementById('new-task-date').value='';
   document.getElementById('new-task-time').value='';
   document.getElementById('new-task-duration').value='';
   setRecur(false);
@@ -2688,6 +2865,8 @@ function signInWithGoogle(){
 
     if(credential && credential.accessToken){
       window.calendarAccessToken = credential.accessToken;
+      // Persiste le token (expire ~1h) pour survivre aux rechargements de page
+      try{ localStorage.setItem('rp_cal_token', JSON.stringify({token:credential.accessToken, at:Date.now()})); }catch(e){}
       console.log('[Auth] ✓ Access token obtained:', window.calendarAccessToken.substring(0,20)+'...');
     } else {
       console.warn('[Auth] ✗ No accessToken in credential');
@@ -2725,6 +2904,12 @@ function go(view, sectorId=null){
   } else if(view==='planning'){
     document.getElementById('view-planning').classList.add('active');
     renderPlanning();
+  } else if(view==='mails'){
+    document.getElementById('view-mails').classList.add('active');
+    renderMails(false);
+  } else if(view==='crm'){
+    document.getElementById('view-crm').classList.add('active');
+    renderCrm(false);
   }
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -2852,10 +3037,11 @@ function setTaskTime(sectorId, taskId){
         task.startTime = startTime;
         task.duration = duration;
         if(startTime && googleUser){
+          const taskWithSector = Object.assign({}, task, {sectorId});
           if(task.calendarEventId){
-            await calendarUpdateEvent(task);
+            await calendarUpdateEvent(taskWithSector);
           } else {
-            await calendarCreateEvent(task);
+            task.calendarEventId = await calendarCreateEvent(taskWithSector);
           }
         }
         save();
@@ -3031,6 +3217,18 @@ function validateRitual(){
 
 // --------- Google Calendar Integration ---------
 let googleUser = null;
+
+// Restaure le token Calendar sauvegardé s'il a moins de 55 min (sinon perdu à chaque rechargement)
+try{
+  const saved = JSON.parse(localStorage.getItem('rp_cal_token')||'null');
+  if(saved && saved.token && (Date.now()-saved.at) < 55*60*1000){
+    window.calendarAccessToken = saved.token;
+    console.log('[Calendar] Token restauré depuis localStorage');
+  } else if(saved){
+    localStorage.removeItem('rp_cal_token');
+    console.log('[Calendar] Token expiré — reconnecte-toi pour synchroniser Calendar');
+  }
+}catch(e){}
 
 function initGoogleAuth(){
   // No-op : Firebase Auth handles Google OAuth
@@ -3470,6 +3668,247 @@ async function changeActiveDataUid(uid){
   else if(activeView.id === 'view-ritual') ritualGoStep(1);
 }
 
+// --------- V2 : rpApi — backend n8n ---------
+const RP_API_BASE = 'https://n8n.srv1831057.hstgr.cloud/webhook';
+const RP_API_KEY  = 'rphub_kX92mV4tQ7wZ3nB8dJ5cR1fY6hL0sGpE';
+const RP_CACHE_TTL = 10*60*1000;
+
+async function rpCall(path, opts){
+  opts = opts || {};
+  const method = opts.method || 'GET';
+  const cacheKey = 'rp_cache_'+path;
+  if(method==='GET' && !opts.force){
+    try{
+      const c = JSON.parse(localStorage.getItem(cacheKey)||'null');
+      if(c && (Date.now()-c.at) < RP_CACHE_TTL) return c.data;
+    }catch(e){}
+  }
+  const headers = {'X-Roanapura-Key': RP_API_KEY};
+  if(opts.body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(RP_API_BASE+'/'+path, {
+    method, headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  if(method==='GET'){
+    try{ localStorage.setItem(cacheKey, JSON.stringify({at:Date.now(), data:data})); }catch(e){}
+  }
+  return data;
+}
+function rpInvalidate(path){ try{ localStorage.removeItem('rp_cache_'+path); }catch(e){} }
+
+// --------- V2 : Mails ---------
+let mailsData = [];
+function mailIsUnread(m){ return Array.isArray(m.labelIds) && m.labelIds.includes('UNREAD'); }
+function updateMailsBadge(){
+  const b = document.getElementById('mails-badge');
+  if(!b) return;
+  const n = mailsData.filter(mailIsUnread).length;
+  b.textContent = n;
+  b.style.display = n>0 ? 'inline-block' : 'none';
+}
+function toggleMailOpen(id){
+  const el = document.getElementById('mail-'+id);
+  if(el) el.classList.toggle('open');
+}
+function toggleMailReply(id, ev){
+  if(ev) ev.stopPropagation();
+  const el = document.getElementById('mail-'+id);
+  if(el) el.classList.toggle('replying');
+}
+async function renderMails(force){
+  const box = document.getElementById('mails-content');
+  const st = document.getElementById('mails-status');
+  if(!box) return;
+  if(st) st.textContent = 'CHARGEMENT…';
+  try{
+    if(force) rpInvalidate('rp-mails-list');
+    const data = await rpCall('rp-mails-list');
+    mailsData = Array.isArray(data) ? data : [data];
+    updateMailsBadge();
+    if(st) st.textContent = mailsData.filter(mailIsUnread).length + ' NON LU(S)';
+    if(!mailsData.length){ box.innerHTML = '<div class="empty">Boîte vide.</div>'; return; }
+    box.innerHTML = mailsData.map(m=>{
+      const fromRaw = (m.from && (m.from.text || (m.from.value && m.from.value[0] && (m.from.value[0].name || m.from.value[0].address)))) || '—';
+      const d = m.date ? new Date(m.date) : null;
+      const ds = d ? String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') : '';
+      return `
+      <div class="mail-item ${mailIsUnread(m)?'unread':''}" id="mail-${m.id}" onclick="toggleMailOpen('${m.id}')">
+        <div class="mail-head">
+          ${mailIsUnread(m)?'<span class="mail-dot"></span>':''}
+          <span class="mail-from">${escapeHtml(fromRaw)}</span>
+          <span class="mail-subject">${escapeHtml(m.subject||'(sans objet)')}</span>
+          <span class="mail-date">${ds}</span>
+        </div>
+        <div class="mail-actions">
+          <button class="mail-btn" onclick="mailAction('${m.id}','read', event)">✓ LU</button>
+          <button class="mail-btn" onclick="mailAction('${m.id}','archive', event)">ARCHIVER</button>
+          <button class="mail-btn red" onclick="toggleMailReply('${m.id}', event)">RÉPONDRE</button>
+          <a class="mail-btn" style="text-decoration:none" href="https://mail.google.com/mail/u/0/#inbox/${m.threadId||m.id}" target="_blank" onclick="event.stopPropagation()">GMAIL ↗</a>
+        </div>
+        <div class="mail-reply-box" onclick="event.stopPropagation()">
+          <textarea id="reply-${m.id}" placeholder="Ta réponse…"></textarea>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="mail-btn red" onclick="mailReply('${m.id}', event)">▸ ENVOYER</button>
+            <button class="mail-btn" onclick="toggleMailReply('${m.id}', event)">ANNULER</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.error('[Mails]', e);
+    if(st) st.textContent = 'ERREUR';
+    box.innerHTML = '<div class="empty">Impossible de charger les mails ('+escapeHtml(e.message||'erreur')+'). Vérifie que le workflow n8n est actif.</div>';
+  }
+}
+async function mailAction(id, action, ev){
+  if(ev) ev.stopPropagation();
+  try{
+    await rpCall('rp-mail-action', {method:'POST', body:{id:id, action:action}});
+    const m = mailsData.find(x=>x.id===id);
+    if(action==='read' && m && Array.isArray(m.labelIds)) m.labelIds = m.labelIds.filter(l=>l!=='UNREAD');
+    if(action==='archive') mailsData = mailsData.filter(x=>x.id!==id);
+    try{ localStorage.setItem('rp_cache_rp-mails-list', JSON.stringify({at:Date.now(), data:mailsData})); }catch(e){}
+    updateMailsBadge();
+    renderMails(false);
+  }catch(e){
+    alert('Action mail échouée : '+(e.message||e));
+  }
+}
+async function mailReply(id, ev){
+  if(ev) ev.stopPropagation();
+  const ta = document.getElementById('reply-'+id);
+  const msg = ((ta && ta.value) || '').trim();
+  if(!msg) return;
+  const st = document.getElementById('mails-status');
+  if(st) st.textContent = 'ENVOI…';
+  try{
+    await rpCall('rp-mail-reply', {method:'POST', body:{id:id, message: escapeHtml(msg).replace(/\n/g,'<br>')}});
+    toggleMailReply(id);
+    if(ta) ta.value = '';
+    if(st) st.textContent = 'RÉPONSE ENVOYÉE ✓';
+  }catch(e){
+    if(st) st.textContent = 'ERREUR';
+    alert('Envoi échoué : '+(e.message||e));
+  }
+}
+
+// --------- V2 : CRM ---------
+const CRM_STATUTS = ['Prospect','Contact initié','RDV fixé','Proposition','Client','Perdu'];
+const CRM_COL_CLS = {'Prospect':'s-prospect','Contact initié':'s-contact','RDV fixé':'s-rdv','Proposition':'s-propal','Client':'s-client','Perdu':'s-perdu'};
+const CRM_SECTEURS = ['Marketing & Media Buying','Agents IA','Side Business'];
+const CRM_SOURCES = ['LinkedIn','Réseau','Inbound','Autre'];
+let crmData = [];
+
+async function renderCrm(force){
+  const board = document.getElementById('crm-board');
+  const st = document.getElementById('crm-status');
+  if(!board) return;
+  if(st) st.textContent = 'CHARGEMENT…';
+  try{
+    if(force) rpInvalidate('rp-crm-list');
+    const data = await rpCall('rp-crm-list');
+    crmData = Array.isArray(data) ? data : [data];
+    if(st) st.textContent = crmData.length + ' DEAL(S)';
+    const now = Date.now();
+    const actifs = crmData.filter(d=>d.Statut && d.Statut!=='Perdu' && d.Statut!=='Client');
+    const pipeline = actifs.reduce((s,d)=>s+(Number(d.Valeur)||0), 0);
+    const needsRelance = d => d['Dernier contact'] && (now - new Date(d['Dernier contact']).getTime()) > 5*24*3600*1000;
+    const relance = actifs.filter(needsRelance).length;
+    const metrics = document.getElementById('crm-metrics');
+    if(metrics) metrics.innerHTML = `
+      <div class="crm-metric red"><div class="crm-metric-label">Pipeline actif</div><div class="crm-metric-value">${pipeline.toLocaleString('fr-FR')}€</div></div>
+      <div class="crm-metric amber"><div class="crm-metric-label">Deals actifs</div><div class="crm-metric-value">${actifs.length}</div></div>
+      <div class="crm-metric gray"><div class="crm-metric-label">À relancer (+5j)</div><div class="crm-metric-value" style="color:var(--amber-bright)">${relance}</div></div>`;
+    board.innerHTML = CRM_STATUTS.map(s=>{
+      const deals = crmData.filter(d=>d.Statut===s);
+      return `<div>
+        <div class="crm-col-head ${CRM_COL_CLS[s]}">${escapeHtml(s)} · ${deals.length}</div>
+        ${deals.map(d=>`
+          <div class="crm-card" onclick="openCrmForm('${d.id}')">
+            <div class="crm-card-name">${escapeHtml(d.Deal||'—')}</div>
+            <div class="crm-card-meta">${d.Valeur?Number(d.Valeur).toLocaleString('fr-FR')+'€':''}${(needsRelance(d) && s!=='Client' && s!=='Perdu')?' <span class="warn">⟳ relance</span>':''}</div>
+          </div>`).join('')}
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.error('[CRM]', e);
+    if(st) st.textContent = 'ERREUR';
+    board.innerHTML = '<div class="empty">Impossible de charger le CRM ('+escapeHtml(e.message||'erreur')+'). Vérifie que le workflow n8n est actif.</div>';
+  }
+  renderDocs(force);
+}
+
+function openCrmForm(recordId){
+  const d = recordId ? crmData.find(x=>x.id===recordId) : null;
+  openModal({
+    tag:'// CRM',
+    title: d ? 'Modifier le deal' : 'Nouveau deal',
+    body:`<div class="crm-form">
+      <div class="full"><label>Deal</label><input id="crm-f-deal" value="${escapeHtml((d&&d.Deal)||'')}" placeholder="Ex: Agents IA — Garage Morel"></div>
+      <div><label>Statut</label><select id="crm-f-statut">${CRM_STATUTS.map(s=>`<option ${(d&&d.Statut)===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}</select></div>
+      <div><label>Valeur (€)</label><input id="crm-f-valeur" type="number" min="0" value="${(d&&d.Valeur)!=null?d.Valeur:''}"></div>
+      <div><label>Secteur</label><select id="crm-f-secteur"><option value=""></option>${CRM_SECTEURS.map(s=>`<option ${(d&&d.Secteur)===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}</select></div>
+      <div><label>Dernier contact</label><input id="crm-f-contact" type="date" value="${(d&&d['Dernier contact'])||''}"></div>
+      <div><label>Prochaine action</label><input id="crm-f-action" value="${escapeHtml((d&&d['Prochaine action'])||'')}"></div>
+      <div><label>Source</label><select id="crm-f-source"><option value=""></option>${CRM_SOURCES.map(s=>`<option ${(d&&d.Source)===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}</select></div>
+      <div class="full"><label>Notes</label><textarea id="crm-f-notes" rows="3">${escapeHtml((d&&d.Notes)||'')}</textarea></div>
+    </div>`,
+    actions:[
+      {label:'Annuler', cls:'ghost', onclick:closeModal},
+      {label: d ? 'Enregistrer' : 'Créer', cls:'primary', onclick:()=>saveCrmForm(recordId||null)},
+    ]
+  });
+}
+
+async function saveCrmForm(recordId){
+  const d = recordId ? crmData.find(x=>x.id===recordId) : null;
+  const fields = {
+    'Deal': document.getElementById('crm-f-deal').value.trim(),
+    'Statut': document.getElementById('crm-f-statut').value,
+    'Valeur': Number(document.getElementById('crm-f-valeur').value)||0,
+    'Secteur': document.getElementById('crm-f-secteur').value || null,
+    'Dernier contact': document.getElementById('crm-f-contact').value || null,
+    'Prochaine action': document.getElementById('crm-f-action').value.trim() || null,
+    'Source': document.getElementById('crm-f-source').value || null,
+    'Notes': document.getElementById('crm-f-notes').value.trim() || null,
+    'Contact': (d && d.Contact) ? d.Contact : []
+  };
+  if(!fields.Deal){ alert('Nom du deal requis.'); return; }
+  try{
+    await rpCall('rp-crm-upsert', {method:'POST', body:{recordId: recordId||'', fields:fields}});
+    closeModal();
+    renderCrm(true);
+  }catch(e){
+    alert('Sauvegarde CRM échouée : '+(e.message||e));
+  }
+}
+
+// --------- V2 : Docs Drive + LinkedIn ---------
+async function renderDocs(force){
+  const panel = document.getElementById('docs-panel');
+  if(!panel) return;
+  try{
+    if(force) rpInvalidate('rp-docs-list');
+    const data = await rpCall('rp-docs-list');
+    const docs = Array.isArray(data) ? data : [data];
+    const li = arr => arr.length
+      ? arr.map(f=>`<a class="docs-link" href="${f.webViewLink||'#'}" target="_blank">📄 ${escapeHtml(f.name||'—')}</a>`).join('')
+      : '<div class="empty" style="padding:4px 0">Aucun fichier.</div>';
+    panel.innerHTML = `
+      <div class="docs-group-title">Contrats</div>${li(docs.filter(x=>x.categorie==='contrats'))}
+      <div class="docs-group-title">Propositions commerciales</div>${li(docs.filter(x=>x.categorie==='propales'))}
+      <div class="linkedin-row">
+        <a class="mail-btn" style="text-decoration:none" href="https://www.linkedin.com/in/antoine-mazoin-b688642a9/" target="_blank">LINKEDIN — PROFIL ↗</a>
+        <a class="mail-btn" style="text-decoration:none" href="https://www.linkedin.com/dashboard/" target="_blank">LINKEDIN — STATS ↗</a>
+      </div>`;
+  }catch(e){
+    console.error('[Docs]', e);
+    panel.innerHTML = '<div class="empty">Impossible de charger les docs.</div>';
+  }
+}
+
 // --------- Initialize on startup ---------
 initGoogleAuth();
 
@@ -3536,6 +3975,14 @@ auth.onAuthStateChanged(async (user) => {
       renderHome();
       renderAdminPanel();
       renderDataSelector();
+
+      // V2 : badge mails non-lus (chargement silencieux, admin uniquement)
+      if(currentUserIsAdmin){
+        rpCall('rp-mails-list').then(data=>{
+          mailsData = Array.isArray(data) ? data : [data];
+          updateMailsBadge();
+        }).catch(e=>console.warn('[Mails] badge non chargé', e));
+      }
 
       console.log('[Auth] Access granted');
       console.log('[Calendar] Ready to sync — using REST API with access token');
