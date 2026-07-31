@@ -1294,11 +1294,14 @@ input,textarea,select{font-family:inherit;color:inherit;background:none;border:n
   display:flex;align-items:flex-start;gap:14px;
   background:var(--surface);border:1px solid var(--border);
   padding:14px 16px;margin-bottom:8px;border-radius:1px;
-  transition:border-color .2s, opacity .2s;
+  transition:border-color .2s, background .2s;
 }
 .rm-step:hover{border-color:var(--border-strong)}
-.rm-step.done{opacity:.5}
-.rm-step.done .rm-step-label{text-decoration:line-through;color:var(--text-3)}
+/* Étape terminée : jamais d'opacity (le fond de page transparaîtrait) —
+   on assombrit le fond opaque et on grise le texte à la place. */
+.rm-step.done{background:var(--bg-2);border-color:var(--border)}
+.rm-step.done .rm-step-label{text-decoration:line-through;color:var(--text-faint)}
+.rm-step.done .rm-step-num{color:var(--text-faint)}
 .rm-step-check{
   width:20px;height:20px;flex-shrink:0;margin-top:1px;
   border:1px solid var(--border-strong);border-radius:1px;cursor:pointer;
