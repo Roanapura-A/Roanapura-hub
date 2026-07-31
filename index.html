@@ -4064,7 +4064,11 @@ const ROADMAP_SEED = {
 };
 
 function rmPath(){
-  return 'roadmaps/'+(activeDataUid || currentUser.uid);
+  // Stocké sous users/{uid}/roadmaps : clé dédiée, mais sur un nœud dont les
+  // règles Firebase fonctionnent déjà (aucune règle à ajouter).
+  // save() n'écrit que des sous-chemins précis (caTarget, stats, sectors/…),
+  // jamais l'objet users/{uid} entier → cette clé ne peut pas être écrasée.
+  return 'users/'+(activeDataUid || currentUser.uid)+'/roadmaps';
 }
 function rmUid(prefix){
   return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
@@ -4105,7 +4109,7 @@ async function loadRoadmaps(){
     console.error('[Roadmaps] Lecture échouée', e);
     if(st) st.textContent = 'ERREUR';
     const grid = document.getElementById('rm-grid');
-    if(grid) grid.innerHTML = '<div class="quad-empty">Lecture Firebase refusée sur le nœud <b>roadmaps</b>.<br>Ajoute la règle correspondante dans la console Firebase.</div>';
+    if(grid) grid.innerHTML = '<div class="quad-empty">Lecture échouée : '+escapeHtml(e.code||e.message||'erreur')+'</div>';
   }
 }
 
@@ -4285,14 +4289,19 @@ async function createRoadmap(){
   if(!title){ alert('Titre requis.'); return; }
   const id = rmUid('rm');
   const rm = { id:id, title:title, createdAt:Date.now(), order:rmList().length, steps:{} };
+  const fullPath = rmPath()+'/'+id;
   roadmapsData[id] = rm;
   closeModal();
   renderRoadmaps();
   try{
-    await db.ref(rmPath()+'/'+id).set(rm);
+    console.log('[Roadmaps] écriture → '+fullPath);
+    await db.ref(fullPath).set(rm);
+    console.log('[Roadmaps] création OK');
   }catch(e){
-    console.error('[Roadmaps] Création échouée', e);
-    alert('Création échouée : '+(e.message||e.code||e));
+    delete roadmapsData[id];
+    renderRoadmaps();
+    console.error('[Roadmaps] Création échouée sur '+fullPath, e);
+    alert('Création échouée.\n\nChemin : '+fullPath+'\nErreur : '+(e.code||e.message||e));
   }
 }
 
