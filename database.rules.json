@@ -1,0 +1,67 @@
+{
+  "rules": {
+    "meta": {
+      "whitelist": {
+        ".read": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin')",
+        ".write": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin')",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "pendingInvites": {
+        ".read": "auth != null && auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true",
+        ".write": "auth != null && auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))",
+        ".write": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))"
+      }
+    },
+    "v2": {
+      "users": {
+        "$uid": {
+          ".read": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))",
+          ".write": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))",
+          "clients": {
+            "$id": {
+              ".validate": "newData.hasChildren(['nom', 'type', 'statut', 'prochaineAction', 'createdAt'])",
+              "nom": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
+              "statut": { ".validate": "newData.isString() && newData.val().matches(/^(prospect|rdv|devis|signe|en_cours|livre|facture|paye)$/)" },
+              "type": { ".validate": "newData.val() === 'client' || newData.val() === 'interne'" },
+              "prochaineAction": { ".validate": "newData.child('texte').isString() && newData.child('texte').val().length > 0 && newData.child('date').isNumber()" },
+              "montant": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+              "archive": { ".validate": "newData.isBoolean()" }
+            }
+          },
+          "taches": {
+            "$id": {
+              ".validate": "newData.hasChildren(['titre', 'quadrant', 'statut', 'aujourdhui', 'createdAt'])",
+              "titre": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300" },
+              "quadrant": { ".validate": "newData.isString() && newData.val().matches(/^Q[1-4]$/)" },
+              "statut": { ".validate": "newData.isString() && newData.val().matches(/^(a_faire|en_cours|fait)$/)" },
+              "aujourdhui": { ".validate": "newData.isBoolean()" }
+            }
+          },
+          "notes": {
+            "$id": {
+              ".validate": "newData.hasChildren(['clientId', 'type', 'texte', 'auteur', 'createdAt'])",
+              "type": { ".validate": "newData.isString() && newData.val().matches(/^(call|rdv|libre)$/)" }
+            }
+          },
+          "inbox": {
+            "$id": {
+              ".validate": "newData.hasChildren(['texte', 'source', 'traite', 'createdAt'])",
+              "source": { ".validate": "newData.val() === 'texte' || newData.val() === 'vocal'" },
+              "traite": { ".validate": "newData.isBoolean()" }
+            }
+          },
+          "mission": {
+            ".validate": "newData.hasChildren(['tacheId', 'startedAt'])"
+          }
+        }
+      }
+    }
+  }
+}
