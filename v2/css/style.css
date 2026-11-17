@@ -188,3 +188,19 @@ dialog.capture::backdrop { background: rgba(5, 8, 15, 0.7); }
   .barre-utilisateur { display: none; }
   .contenu { padding: 24px 16px; }
 }
+
+/* ---------- Étape 3 : cartes de l'écran Aujourd'hui, Inbox ---------- */
+
+.grille-jour { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.carte-entete { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.carte-titre { margin: 0 0 12px; font-size: 12px; font-weight: 500; color: var(--texte-3); letter-spacing: 0.04em; text-transform: uppercase; }
+.carte-entete .carte-titre { margin: 0; }
+.carte-compteur { font-size: 12px; font-weight: 600; color: var(--or); }
+
+.inbox-liste { display: flex; flex-direction: column; }
+.inbox-ligne { display: flex; flex-direction: column; gap: 8px; padding: 14px 0; border-top: 1px solid var(--bordure); }
+.inbox-ligne:first-child { border-top: none; padding-top: 0; }
+.inbox-texte { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.inbox-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.champ-petit { width: auto; min-height: 36px; font-size: 13px; padding: 0 8px; background: var(--carte-2); }
+.ligne-erreur, .capture-message { margin: 0; color: var(--alerte); font-size: 13px; }
