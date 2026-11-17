@@ -1,7 +1,7 @@
 // Éléments d'interface communs. Règle : aucune donnée n'est injectée par innerHTML.
 // Le texte passe toujours par textContent (via el()).
 
-import { icone } from './icones.js?v=3';
+import { icone } from './icones.js?v=4';
 
 // el('div', { class: 'carte', onclick: fn }, [enfant, 'texte', ...])
 export function el(tag, attrs = {}, enfants = []) {
@@ -85,4 +85,60 @@ const fmtJour = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', wee
 export function dateLongue(ms = Date.now()) {
   const s = fmtJour.format(new Date(ms));
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const fmtCourt = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short' });
+export function dateCourte(ms) {
+  return fmtCourt.format(new Date(ms));
+}
+
+// Début du jour (heure de Paris) en ms, pour comparer des échéances.
+export function debutJour(ms = Date.now()) {
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+  const [a, m, j] = p.split('-').map(Number);
+  return new Date(a, m - 1, j).getTime();
+}
+
+// 'AAAA-MM-JJ' (champ date) <-> ms (midi heure locale, évite les décalages de fuseau)
+export function versMs(valeurChamp) {
+  if (!valeurChamp) return null;
+  const [a, m, j] = valeurChamp.split('-').map(Number);
+  return new Date(a, m - 1, j, 12).getTime();
+}
+export function versChamp(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// Échéance lisible + état : { texte, retard }
+export function libelleEcheance(ms) {
+  if (!ms) return null;
+  const j = debutJour();
+  const jEch = debutJour(ms);
+  if (jEch < j) return { texte: 'En retard', retard: true };
+  if (jEch === j) return { texte: "Aujourd'hui", retard: false };
+  return { texte: dateCourte(ms), retard: false };
+}
+
+// Fenêtre modale réutilisable. Renvoie { dialogue, fermer }.
+export function fenetre(titre, corps, actions) {
+  const d = el('dialog', { class: 'fenetre', 'aria-label': titre }, [
+    el('h2', { class: 'fenetre-titre', texte: titre }),
+    corps,
+    el('div', { class: 'fenetre-actions' }, actions),
+  ]);
+  const fermer = () => { if (d.open) d.close(); d.remove(); };
+  d.addEventListener('close', () => d.remove());
+  d.addEventListener('click', (e) => { if (e.target === d) fermer(); });
+  document.body.appendChild(d);
+  d.showModal();
+  return { dialogue: d, fermer };
+}
+
+export function champ(label, controle) {
+  const id = controle.id || `c-${Math.random().toString(36).slice(2, 9)}`;
+  controle.id = id;
+  return el('div', { class: 'groupe' }, [el('label', { class: 'groupe-label', for: id, texte: label }), controle]);
 }

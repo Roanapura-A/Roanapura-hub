@@ -204,3 +204,55 @@ dialog.capture::backdrop { background: rgba(5, 8, 15, 0.7); }
 .inbox-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .champ-petit { width: auto; min-height: 36px; font-size: 13px; padding: 0 8px; background: var(--carte-2); }
 .ligne-erreur, .capture-message { margin: 0; color: var(--alerte); font-size: 13px; }
+
+/* ---------- Étape 4 : fenêtres, formulaires, tâches ---------- */
+
+dialog.fenetre {
+  width: min(560px, calc(100vw - 32px));
+  background: var(--carte); color: var(--texte);
+  border: 1px solid var(--bordure); border-radius: 12px; padding: 24px;
+}
+dialog.fenetre[open] { display: flex; flex-direction: column; gap: 16px; }
+dialog.fenetre::backdrop { background: rgba(5, 8, 15, 0.7); }
+.fenetre-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.fenetre-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.fenetre-actions .pousse { margin-right: auto; }
+.groupe { display: flex; flex-direction: column; gap: 6px; }
+.groupe-label { font-size: 12px; font-weight: 600; color: var(--texte-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.groupes-ligne { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+textarea.champ { min-height: 80px; padding: 10px 12px; resize: vertical; }
+select.champ { cursor: pointer; }
+.form-erreur { margin: 0; color: var(--alerte); font-size: 13px; }
+
+.segment { display: flex; border: 1px solid var(--bordure); border-radius: var(--rayon-petit); padding: 3px; background: var(--carte); }
+.segment button { min-height: 34px; padding: 0 14px; border: none; border-radius: 6px; background: transparent; color: var(--texte-2); font: 500 13px var(--police); cursor: pointer; }
+.segment button[aria-pressed="true"] { background: var(--carte-2); color: var(--or); font-weight: 600; }
+
+.matrice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .matrice { grid-template-columns: 1fr; } }
+.quadrant { display: flex; flex-direction: column; gap: 12px; min-height: 240px; }
+.quadrant-q1 { box-shadow: inset 0 2px 0 var(--or); }
+.quadrant-entete { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.quadrant-nom { display: flex; align-items: center; gap: 10px; }
+.quadrant-nom h2 { margin: 0; font-size: 15px; font-weight: 700; }
+
+.tache {
+  background: var(--carte-2); border: 1px solid var(--bordure); border-radius: var(--rayon-petit);
+  padding: 14px; display: flex; flex-direction: column; gap: 12px;
+}
+.tache-titre {
+  all: unset; cursor: pointer; font-weight: 600; overflow-wrap: anywhere;
+}
+.tache-titre:hover { color: var(--or); }
+.tache-titre:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; border-radius: 4px; }
+.tache-bas { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tache-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.echeance { font-size: 12px; color: var(--texte-3); }
+.echeance-retard { color: var(--alerte); font-weight: 600; }
+.btn-mini { min-height: 32px; padding: 0 10px; font-size: 12px; }
+.btn-actif { color: var(--or); border-color: var(--or); }
+.note-bas { margin: 0; font-size: 13px; color: var(--texte-3); }
+.liste-taches { display: flex; flex-direction: column; gap: 10px; }
+.faites { display: flex; flex-direction: column; gap: 8px; }
+.faites summary { cursor: pointer; color: var(--texte-2); font-weight: 500; }
+.faite { color: var(--texte-3); text-decoration: line-through; padding: 4px 0; }

@@ -2,10 +2,10 @@
 // Chaque écran exporte afficher(conteneur) qui peut renvoyer une fonction de nettoyage
 // (désabonnement des écouteurs Firebase quand on quitte l'écran).
 
-import { ECRANS } from './constantes.js?v=3';
-import * as aujourdhui from './ecrans/aujourdhui.js?v=3';
-import * as taches from './ecrans/taches.js?v=3';
-import * as clients from './ecrans/clients.js?v=3';
+import { ECRANS } from './constantes.js?v=4';
+import * as aujourdhui from './ecrans/aujourdhui.js?v=4';
+import * as taches from './ecrans/taches.js?v=4';
+import * as clients from './ecrans/clients.js?v=4';
 
 const MODULES = { aujourdhui, taches, clients };
 const PAR_DEFAUT = 'aujourdhui';
