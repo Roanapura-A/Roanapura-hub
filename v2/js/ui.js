@@ -1,7 +1,7 @@
 // Éléments d'interface communs. Règle : aucune donnée n'est injectée par innerHTML.
 // Le texte passe toujours par textContent (via el()).
 
-import { icone } from './icones.js?v=4';
+import { icone } from './icones.js?v=5';
 
 // el('div', { class: 'carte', onclick: fn }, [enfant, 'texte', ...])
 export function el(tag, attrs = {}, enfants = []) {
@@ -141,4 +141,18 @@ export function champ(label, controle) {
   const id = controle.id || `c-${Math.random().toString(36).slice(2, 9)}`;
   controle.id = id;
   return el('div', { class: 'groupe' }, [el('label', { class: 'groupe-label', for: id, texte: label }), controle]);
+}
+
+// N'accepte que les liens http(s) : bloque javascript:, data:, etc.
+export function lienSur(url) {
+  if (typeof url !== 'string' || !url.trim()) return null;
+  try {
+    const u = new URL(url.trim());
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.href : null;
+  } catch { return null; }
+}
+
+const fmtEuros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+export function euros(n) {
+  return typeof n === 'number' ? fmtEuros.format(n) : '';
 }

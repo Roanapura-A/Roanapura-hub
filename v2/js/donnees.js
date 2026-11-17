@@ -1,8 +1,8 @@
 // SEULE couche qui touche à firebase.database(). Les écrans passent par ici.
 // Toutes les données V2 vivent sous v2/users/{uid}/. Écritures ciblées uniquement (jamais de set sur une collection).
 
-import { firebaseConfig, RACINE_V2 } from './config.js?v=4';
-import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=4';
+import { firebaseConfig, RACINE_V2 } from './config.js?v=5';
+import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=5';
 
 /* global firebase */
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -12,9 +12,15 @@ const HORODATAGE = firebase.database.ServerValue.TIMESTAMP;
 const COLLECTIONS = ['clients', 'taches', 'notes', 'inbox'];
 
 let uidDonnees = null; // l'utilisateur dont on lit/écrit les données (soi-même par défaut)
+let auteur = 'antoine'; // signature des notes écrites depuis l'appli
 
-export function definirUtilisateur(uid) {
+export function definirUtilisateur(uid, signature) {
   uidDonnees = uid;
+  if (signature) auteur = signature;
+}
+
+export function auteurCourant() {
+  return auteur;
 }
 
 function chemin(...morceaux) {
@@ -63,7 +69,7 @@ const SCHEMAS = {
       prochaineAction: (v) => (v && texte(v.texte, 300) && typeof v.date === 'number') || 'La prochaine action et sa date sont obligatoires.',
       contact: (v) => v === null || typeof v === 'object' || 'Contact invalide.',
       montant: (v) => (v === null || (typeof v === 'number' && v >= 0)) || 'Montant invalide.',
-      liens: (v) => v === null || typeof v === 'object' || 'Liens invalides.',
+      liens: (v) => v === null || (typeof v === 'object' && Object.values(v).every((x) => x === null || (typeof x === 'string' && /^https?:\/\//i.test(x)))) || 'Les liens doivent commencer par https://',
       archive: (v) => typeof v === 'boolean' || 'Archive invalide.',
     },
   },

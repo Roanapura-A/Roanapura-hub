@@ -1,8 +1,8 @@
 // Connexion Google + contrôle de la liste d'accès.
 // La vraie sécurité est dans les règles RTDB : ici on ne fait qu'adapter l'affichage.
 
-import { ADMIN_EMAIL } from './config.js?v=4';
-import { lireAcces, definirUtilisateur } from './donnees.js?v=4';
+import { ADMIN_EMAIL } from './config.js?v=5';
+import { lireAcces, definirUtilisateur } from './donnees.js?v=5';
 
 /* global firebase */
 const auth = firebase.auth();
@@ -33,7 +33,7 @@ export function surChangementSession(callback) {
         callback({ etat: 'refuse', email: u.email });
         return;
       }
-      definirUtilisateur(u.uid);
+      definirUtilisateur(u.uid, adminParEmail ? 'antoine' : 'jules');
       callback({
         etat: 'autorise',
         utilisateur: { uid: u.uid, nom: u.displayName || u.email, email: u.email },

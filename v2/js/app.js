@@ -1,11 +1,11 @@
 // Point d'entrée : affiche connexion / refus / appli selon la session.
 
-import { surChangementSession, seConnecter, seDeconnecter } from './auth.js?v=4';
-import { ecouterConnexionReseau } from './donnees.js?v=4';
-import { demarrer, arreter, ECRANS } from './navigation.js?v=4';
-import { ouvrir as ouvrirCapture } from './ecrans/capture.js?v=4';
-import { el, vider, bouton, afficherHorsLigne } from './ui.js?v=4';
-import { icone } from './icones.js?v=4';
+import { surChangementSession, seConnecter, seDeconnecter } from './auth.js?v=5';
+import { ecouterConnexionReseau } from './donnees.js?v=5';
+import { demarrer, arreter, ECRANS } from './navigation.js?v=5';
+import { ouvrir as ouvrirCapture } from './ecrans/capture.js?v=5';
+import { el, vider, bouton, afficherHorsLigne } from './ui.js?v=5';
+import { icone } from './icones.js?v=5';
 
 const racine = document.getElementById('app');
 let stopReseau = null;
