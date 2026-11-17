@@ -16,7 +16,7 @@
     "users": {
       "$uid": {
         ".read": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))",
-        ".write": "auth != null && ((auth.token.email === 'a.mazoin@roanapura.fr' && auth.token.email_verified === true) || root.child('meta/whitelist/'+auth.uid+'/role').val() === 'admin' || (auth.uid === $uid && root.child('meta/whitelist/'+auth.uid).exists()))"
+        ".write": false
       }
     },
     "v2": {

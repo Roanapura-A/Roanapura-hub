@@ -1,8 +1,8 @@
 // SEULE couche qui touche à firebase.database(). Les écrans passent par ici.
 // Toutes les données V2 vivent sous v2/users/{uid}/. Écritures ciblées uniquement (jamais de set sur une collection).
 
-import { firebaseConfig, RACINE_V2 } from './config.js?v=6';
-import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=6';
+import { firebaseConfig, RACINE_V2 } from './config.js?v=7';
+import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=7';
 
 /* global firebase */
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);

@@ -1,8 +1,8 @@
 // Écran Clients : tableau des fiches + fiche ouverte (statut, prochaine action, tâches, notes, liens).
-import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte, lienSur, euros } from '../ui.js?v=6';
-import { ecouter, creer, modifier, archiverClient, auteurCourant } from '../donnees.js?v=6';
-import { STATUTS_CLIENT, TYPES_CLIENT, TYPES_NOTE, libelle } from '../constantes.js?v=6';
-import { icone } from '../icones.js?v=6';
+import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte, lienSur, euros } from '../ui.js?v=7';
+import { ecouter, creer, modifier, archiverClient, auteurCourant } from '../donnees.js?v=7';
+import { STATUTS_CLIENT, TYPES_CLIENT, TYPES_NOTE, libelle } from '../constantes.js?v=7';
+import { icone } from '../icones.js?v=7';
 
 const FILTRES = [
   { id: 'tous', label: 'Tous', garde: (c) => !c.archive },
