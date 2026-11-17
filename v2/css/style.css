@@ -305,3 +305,35 @@ select.champ { cursor: pointer; }
 .lien-fiche { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid var(--bordure); border-radius: var(--rayon-petit); color: var(--texte); text-decoration: none; font-size: 13px; }
 .lien-fiche:hover { border-color: var(--or); }
 .fiche-bas { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Étape 6 : Aujourd'hui ---------- */
+
+.sans-marge { margin: 0; }
+.mission {
+  display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 28px; box-shadow: inset 3px 0 0 var(--or);
+}
+.mission-vide { flex-direction: column; align-items: flex-start; gap: 6px; box-shadow: inset 3px 0 0 var(--bordure); }
+.mission-texte { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.mission-label { font-size: 12px; font-weight: 600; color: var(--or); text-transform: uppercase; letter-spacing: 0.06em; }
+.mission-vide .mission-label { color: var(--texte-3); }
+.mission-titre { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.mission-actions { display: flex; gap: 8px; }
+
+.colonne-droite { display: flex; flex-direction: column; gap: 16px; }
+.jour-ligne { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid var(--bordure); flex-wrap: wrap; }
+.carte-entete + .jour-ligne { border-top: none; padding-top: 4px; }
+.jour-titre { flex: 1 1 200px; min-width: 0; }
+.grisee { opacity: 0.45; }
+.lien-discret { display: inline-block; margin-top: 10px; font-size: 13px; text-decoration: none; }
+
+.relance {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--bordure);
+}
+.carte-titre + .relance { border-top: none; padding-top: 0; }
+.relance:hover .relance-nom { color: var(--or); }
+.relance:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; border-radius: 4px; }
+.relance-texte { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.relance-nom { font-weight: 600; }

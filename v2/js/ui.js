@@ -1,7 +1,7 @@
 // Éléments d'interface communs. Règle : aucune donnée n'est injectée par innerHTML.
 // Le texte passe toujours par textContent (via el()).
 
-import { icone } from './icones.js?v=5';
+import { icone } from './icones.js?v=6';
 
 // el('div', { class: 'carte', onclick: fn }, [enfant, 'texte', ...])
 export function el(tag, attrs = {}, enfants = []) {
