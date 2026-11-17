@@ -1,9 +1,9 @@
 // Écran Aujourd'hui.
 // Étape 3 : bloc Inbox (liste des captures à trier). Mission, liste du jour et relances en étape 6.
-import { el, vider, bouton, enTete, etatVide, etatChargement, etatErreur, dateLongue } from '../ui.js';
-import { ecouter, creer, modifier, supprimerInbox } from '../donnees.js';
-import { QUADRANTS } from '../constantes.js';
-import { ouvrir as ouvrirCapture } from './capture.js';
+import { el, vider, bouton, enTete, etatVide, etatChargement, etatErreur, dateLongue } from '../ui.js?v=3';
+import { ecouter, creer, modifier, supprimerInbox } from '../donnees.js?v=3';
+import { QUADRANTS } from '../constantes.js?v=3';
+import { ouvrir as ouvrirCapture } from './capture.js?v=3';
 
 const fmtHeure = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 

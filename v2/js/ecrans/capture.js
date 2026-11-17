@@ -1,6 +1,6 @@
 // Fenêtre Capture : une note en vrac, Entrée = rangée dans l'Inbox.
-import { el, bouton } from '../ui.js';
-import { creer } from '../donnees.js';
+import { el, bouton } from '../ui.js?v=3';
+import { creer } from '../donnees.js?v=3';
 
 let dialogue = null;
 let champ = null;

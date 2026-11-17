@@ -1,5 +1,5 @@
 // Écran Clients. Étape 1 : coquille. Contenu réel en étape 5.
-import { el, enTete, etatVide } from '../ui.js';
+import { el, enTete, etatVide } from '../ui.js?v=3';
 
 export function afficher(conteneur) {
   conteneur.appendChild(enTete('Clients', 'Fiches clients et projets internes'));

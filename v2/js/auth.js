@@ -1,8 +1,8 @@
 // Connexion Google + contrôle de la liste d'accès.
 // La vraie sécurité est dans les règles RTDB : ici on ne fait qu'adapter l'affichage.
 
-import { ADMIN_EMAIL } from './config.js';
-import { lireAcces, definirUtilisateur } from './donnees.js';
+import { ADMIN_EMAIL } from './config.js?v=3';
+import { lireAcces, definirUtilisateur } from './donnees.js?v=3';
 
 /* global firebase */
 const auth = firebase.auth();
