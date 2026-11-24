@@ -1,15 +1,15 @@
 // SEULE couche qui touche à firebase.database(). Les écrans passent par ici.
 // Toutes les données V2 vivent sous v2/users/{uid}/. Écritures ciblées uniquement (jamais de set sur une collection).
 
-import { firebaseConfig, RACINE_V2 } from './config.js?v=8';
-import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=8';
+import { firebaseConfig, RACINE_V2 } from './config.js?v=9';
+import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, STATUTS_PRESTATAIRE, ids } from './constantes.js?v=9';
 
 /* global firebase */
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const HORODATAGE = firebase.database.ServerValue.TIMESTAMP;
 
-const COLLECTIONS = ['clients', 'taches', 'notes', 'inbox'];
+const COLLECTIONS = ['clients', 'taches', 'notes', 'inbox', 'prestataires'];
 
 let uidDonnees = null; // l'utilisateur dont on lit/écrit les données (soi-même par défaut)
 let auteur = 'antoine'; // signature des notes écrites depuis l'appli
@@ -95,6 +95,14 @@ const SCHEMAS = {
       auteur: (v) => (typeof v === 'string' && /^(antoine|jules|agent:[a-z0-9-]+)$/.test(v)) || 'Auteur invalide.',
     },
   },
+  prestataires: {
+    obligatoires: ['nom', 'statut'],
+    champs: {
+      nom: (v) => texte(v, 200) || 'Le nom est obligatoire (200 caractères max).',
+      localisation: (v) => v === null || (typeof v === 'string' && v.length <= 200) || 'Localisation trop longue.',
+      statut: (v) => dans(STATUTS_PRESTATAIRE, v) || 'Statut inconnu.',
+    },
+  },
   inbox: {
     obligatoires: ['texte', 'source', 'traite'],
     champs: {
@@ -155,8 +163,8 @@ export async function creer(collection, objet) {
   valider(collection, objet, true);
   const ref = db.ref(chemin(collection)).push();
   const donnees = { ...objet, createdAt: HORODATAGE };
+  if (collection === 'clients' || collection === 'prestataires') donnees.updatedAt = HORODATAGE;
   if (collection === 'clients') {
-    donnees.updatedAt = HORODATAGE;
     if (donnees.archive === undefined) donnees.archive = false;
   }
   try {
@@ -170,7 +178,7 @@ export async function modifier(collection, id, champs) {
   valider(collection, champs, false);
   const maj = {};
   for (const [k, v] of Object.entries(champs)) maj[`${k}`] = v;
-  if (collection === 'clients') maj.updatedAt = HORODATAGE;
+  if (collection === 'clients' || collection === 'prestataires') maj.updatedAt = HORODATAGE;
   try {
     await db.ref(chemin(collection, id)).update(maj);
   } catch (e) { throw traduire(e); }
@@ -198,6 +206,37 @@ export async function supprimerClient(id) {
     for (const [tid, t] of Object.entries(taches.val() || {})) if (t && t.clientId === id) maj[chemin('taches', tid, 'clientId')] = null;
     await db.ref().update(maj);
   } catch (e) { throw traduire(e); }
+}
+
+// ---------------------------------------------------------------- Prestataires : factures et notes
+
+const lienHttps = (v) => typeof v === 'string' && /^https?:\/\/\S+$/.test(v.trim()) && v.length <= 2000;
+
+export async function ajouterFacture(prestataireId, { date, libelle, montant, lien }) {
+  if (!prestataireId) throw new ErreurDonnees('Prestataire manquant.');
+  if (typeof date !== 'number') throw new ErreurDonnees('La date est obligatoire.');
+  if (!lienHttps(lien)) throw new ErreurDonnees('Le lien doit commencer par https://');
+  if (montant !== null && !(typeof montant === 'number' && montant >= 0)) throw new ErreurDonnees('Montant invalide.');
+  if (libelle && libelle.length > 200) throw new ErreurDonnees('Libellé trop long.');
+  const ref = db.ref(chemin('prestataires', prestataireId, 'factures')).push();
+  try {
+    await ref.set({ date, libelle: libelle || null, montant, lien: lien.trim(), createdAt: HORODATAGE });
+  } catch (e) { throw traduire(e); }
+}
+
+export async function supprimerFacture(prestataireId, factureId) {
+  try { await db.ref(chemin('prestataires', prestataireId, 'factures', factureId)).remove(); } catch (e) { throw traduire(e); }
+}
+
+export async function ajouterNotePrestataire(prestataireId, texteNote) {
+  if (!texte(texteNote, 5000)) throw new ErreurDonnees('La note est vide.');
+  const ref = db.ref(chemin('prestataires', prestataireId, 'notes')).push();
+  try { await ref.set({ texte: texteNote.trim(), auteur, createdAt: HORODATAGE }); } catch (e) { throw traduire(e); }
+}
+
+export async function supprimerPrestataire(id) {
+  if (!id) throw new ErreurDonnees('Identifiant manquant.');
+  try { await db.ref(chemin('prestataires', id)).remove(); } catch (e) { throw traduire(e); }
 }
 
 export function archiverClient(id) {

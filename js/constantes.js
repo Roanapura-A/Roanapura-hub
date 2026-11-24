@@ -40,6 +40,11 @@ export const SOURCES_INBOX = [
   { id: 'vocal', label: 'Vocal' },
 ];
 
+export const STATUTS_PRESTATAIRE = [
+  { id: 'en_cours', label: 'En cours' },
+  { id: 'arrete', label: 'Arrêté' },
+];
+
 export const LIMITE_LISTE_DU_JOUR = 5;
 
 export const FUSEAU = 'Europe/Paris';
@@ -48,6 +53,7 @@ export const ECRANS = [
   { id: 'aujourdhui', label: "Aujourd'hui", icone: 'accueil' },
   { id: 'taches', label: 'Tâches', icone: 'liste' },
   { id: 'clients', label: 'Clients', icone: 'personnes' },
+  { id: 'prestataires', label: 'Prestataires', icone: 'mallette' },
 ];
 
 export const ids = (liste) => liste.map((x) => x.id);

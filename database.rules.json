@@ -27,38 +27,100 @@
           "clients": {
             "$id": {
               ".validate": "newData.hasChildren(['nom', 'type', 'statut', 'prochaineAction', 'createdAt'])",
-              "nom": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200" },
-              "statut": { ".validate": "newData.isString() && newData.val().matches(/^(prospect|rdv|devis|signe|en_cours|livre|facture|paye)$/)" },
-              "type": { ".validate": "newData.val() === 'client' || newData.val() === 'interne'" },
-              "prochaineAction": { ".validate": "newData.child('texte').isString() && newData.child('texte').val().length > 0 && newData.child('date').isNumber()" },
-              "montant": { ".validate": "newData.isNumber() && newData.val() >= 0" },
-              "archive": { ".validate": "newData.isBoolean()" }
+              "nom": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
+              },
+              "statut": {
+                ".validate": "newData.isString() && newData.val().matches(/^(prospect|rdv|devis|signe|en_cours|livre|facture|paye)$/)"
+              },
+              "type": {
+                ".validate": "newData.val() === 'client' || newData.val() === 'interne'"
+              },
+              "prochaineAction": {
+                ".validate": "newData.child('texte').isString() && newData.child('texte').val().length > 0 && newData.child('date').isNumber()"
+              },
+              "montant": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              },
+              "archive": {
+                ".validate": "newData.isBoolean()"
+              }
             }
           },
           "taches": {
             "$id": {
               ".validate": "newData.hasChildren(['titre', 'quadrant', 'statut', 'aujourdhui', 'createdAt'])",
-              "titre": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300" },
-              "quadrant": { ".validate": "newData.isString() && newData.val().matches(/^Q[1-4]$/)" },
-              "statut": { ".validate": "newData.isString() && newData.val().matches(/^(a_faire|en_cours|fait)$/)" },
-              "aujourdhui": { ".validate": "newData.isBoolean()" }
+              "titre": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+              },
+              "quadrant": {
+                ".validate": "newData.isString() && newData.val().matches(/^Q[1-4]$/)"
+              },
+              "statut": {
+                ".validate": "newData.isString() && newData.val().matches(/^(a_faire|en_cours|fait)$/)"
+              },
+              "aujourdhui": {
+                ".validate": "newData.isBoolean()"
+              }
             }
           },
           "notes": {
             "$id": {
               ".validate": "newData.hasChildren(['clientId', 'type', 'texte', 'auteur', 'createdAt'])",
-              "type": { ".validate": "newData.isString() && newData.val().matches(/^(call|rdv|libre)$/)" }
+              "type": {
+                ".validate": "newData.isString() && newData.val().matches(/^(call|rdv|libre)$/)"
+              }
             }
           },
           "inbox": {
             "$id": {
               ".validate": "newData.hasChildren(['texte', 'source', 'traite', 'createdAt'])",
-              "source": { ".validate": "newData.val() === 'texte' || newData.val() === 'vocal'" },
-              "traite": { ".validate": "newData.isBoolean()" }
+              "source": {
+                ".validate": "newData.val() === 'texte' || newData.val() === 'vocal'"
+              },
+              "traite": {
+                ".validate": "newData.isBoolean()"
+              }
             }
           },
           "mission": {
             ".validate": "newData.hasChildren(['tacheId', 'startedAt'])"
+          },
+          "prestataires": {
+            "$id": {
+              ".validate": "newData.hasChildren(['nom', 'statut', 'createdAt'])",
+              "nom": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
+              },
+              "localisation": {
+                ".validate": "newData.isString() && newData.val().length <= 200"
+              },
+              "statut": {
+                ".validate": "newData.val() === 'en_cours' || newData.val() === 'arrete'"
+              },
+              "factures": {
+                "$fid": {
+                  ".validate": "newData.hasChildren(['date', 'lien'])",
+                  "date": {
+                    ".validate": "newData.isNumber()"
+                  },
+                  "lien": {
+                    ".validate": "newData.isString() && newData.val().matches(/^https?:\\/\\//) && newData.val().length <= 2000"
+                  },
+                  "montant": {
+                    ".validate": "newData.isNumber() && newData.val() >= 0"
+                  },
+                  "libelle": {
+                    ".validate": "newData.isString() && newData.val().length <= 200"
+                  }
+                }
+              },
+              "notes": {
+                "$nid": {
+                  ".validate": "newData.hasChildren(['texte', 'auteur', 'createdAt'])"
+                }
+              }
+            }
           }
         }
       }

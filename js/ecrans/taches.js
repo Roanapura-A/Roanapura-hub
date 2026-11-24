@@ -1,7 +1,7 @@
 // Écran Tâches : matrice d'Eisenhower ou liste triée par quadrant.
-import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte } from '../ui.js?v=8';
-import { ecouter, creer, modifier } from '../donnees.js?v=8';
-import { QUADRANTS, LIMITE_LISTE_DU_JOUR } from '../constantes.js?v=8';
+import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte } from '../ui.js?v=9';
+import { ecouter, creer, modifier } from '../donnees.js?v=9';
+import { QUADRANTS, LIMITE_LISTE_DU_JOUR } from '../constantes.js?v=9';
 
 const DEUX_JOURS = 48 * 3600 * 1000;
 let vue = 'matrice'; // gardée pendant la session
