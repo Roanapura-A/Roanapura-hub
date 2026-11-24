@@ -1,8 +1,8 @@
 // Écran Clients : tableau des fiches + fiche ouverte (statut, prochaine action, tâches, notes, liens).
-import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte, lienSur, euros } from '../ui.js?v=7';
-import { ecouter, creer, modifier, archiverClient, auteurCourant } from '../donnees.js?v=7';
-import { STATUTS_CLIENT, TYPES_CLIENT, TYPES_NOTE, libelle } from '../constantes.js?v=7';
-import { icone } from '../icones.js?v=7';
+import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, libelleEcheance, dateCourte, lienSur, euros } from '../ui.js?v=8';
+import { ecouter, creer, modifier, archiverClient, supprimerClient, auteurCourant } from '../donnees.js?v=8';
+import { STATUTS_CLIENT, TYPES_CLIENT, TYPES_NOTE, libelle } from '../constantes.js?v=8';
+import { icone } from '../icones.js?v=8';
 
 const FILTRES = [
   { id: 'tous', label: 'Tous', garde: (c) => !c.archive },
@@ -171,8 +171,41 @@ function panneauFiche(c, etat) {
       c.archive
         ? bouton('Désarchiver', { variante: 'discret', onclick: () => modifier('clients', c.id, { archive: false }).catch(signaler) })
         : bouton('Archiver', { variante: 'discret', onclick: () => archiverClient(c.id).catch(signaler) }),
+      bouton('Supprimer', { variante: 'discret', class: 'btn btn-discret btn-danger', onclick: () => confirmerSuppression(c, etat) }),
     ]),
   ]);
+}
+
+// Suppression définitive, avec confirmation : on tape le nom de la fiche pour valider.
+function confirmerSuppression(c, etat) {
+  const nbNotes = etat.notes.filter((n) => n.clientId === c.id).length;
+  const nbTaches = etat.taches.filter((t) => t.clientId === c.id).length;
+  const saisie = el('input', { class: 'champ', type: 'text', autocomplete: 'off', placeholder: c.nom });
+  const erreur = el('p', { class: 'form-erreur', role: 'alert' });
+  erreur.hidden = true;
+  const supprimer = bouton('Supprimer définitivement', { class: 'btn btn-danger-plein', disabled: true });
+  const annuler = bouton('Annuler', { variante: 'principal' });
+  const details = [
+    nbNotes ? `${nbNotes} note${nbNotes > 1 ? 's' : ''} supprimée${nbNotes > 1 ? 's' : ''}` : null,
+    nbTaches ? `${nbTaches} tâche${nbTaches > 1 ? 's' : ''} conservée${nbTaches > 1 ? 's' : ''} mais détachée${nbTaches > 1 ? 's' : ''} de la fiche` : null,
+  ].filter(Boolean).join(', ');
+  const { fermer } = fenetre('Supprimer la fiche ?', el('div', { class: 'formulaire' }, [
+    el('p', { class: 'sans-marge', texte: `« ${c.nom} » sera supprimée définitivement, sans retour possible.${details ? ' ' + details + '.' : ''}` }),
+    el('p', { class: 'texte-2 sans-marge', texte: "Pour garder l'historique sans l'afficher, utilise plutôt Archiver." }),
+    champ('Tape le nom de la fiche pour confirmer', saisie),
+    erreur,
+  ]), [supprimer, annuler]);
+  annuler.addEventListener('click', fermer);
+  saisie.focus();
+  saisie.addEventListener('input', () => { supprimer.disabled = saisie.value.trim() !== c.nom.trim(); });
+  supprimer.addEventListener('click', async () => {
+    supprimer.disabled = true;
+    try {
+      await supprimerClient(c.id);
+      if (selection === c.id) selection = null;
+      fermer();
+    } catch (e) { erreur.textContent = e.message; erreur.hidden = false; supprimer.disabled = false; }
+  });
 }
 
 function ouvrirFormulaireNote(c) {

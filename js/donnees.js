@@ -1,8 +1,8 @@
 // SEULE couche qui touche à firebase.database(). Les écrans passent par ici.
 // Toutes les données V2 vivent sous v2/users/{uid}/. Écritures ciblées uniquement (jamais de set sur une collection).
 
-import { firebaseConfig, RACINE_V2 } from './config.js?v=7';
-import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=7';
+import { firebaseConfig, RACINE_V2 } from './config.js?v=8';
+import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, ids } from './constantes.js?v=8';
 
 /* global firebase */
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -181,6 +181,22 @@ export async function supprimerInbox(id) {
   if (!id) throw new ErreurDonnees('Identifiant manquant.');
   try {
     await db.ref(chemin('inbox', id)).remove();
+  } catch (e) { throw traduire(e); }
+}
+
+// Suppression définitive d'une fiche : retire aussi ses notes et détache ses tâches (clientId vidé).
+export async function supprimerClient(id) {
+  if (!id) throw new ErreurDonnees('Identifiant manquant.');
+  try {
+    const [notes, taches] = await Promise.all([
+      db.ref(chemin('notes')).once('value'),
+      db.ref(chemin('taches')).once('value'),
+    ]);
+    const maj = {};
+    maj[chemin('clients', id)] = null;
+    for (const [nid, n] of Object.entries(notes.val() || {})) if (n && n.clientId === id) maj[chemin('notes', nid)] = null;
+    for (const [tid, t] of Object.entries(taches.val() || {})) if (t && t.clientId === id) maj[chemin('taches', tid, 'clientId')] = null;
+    await db.ref().update(maj);
   } catch (e) { throw traduire(e); }
 }
 

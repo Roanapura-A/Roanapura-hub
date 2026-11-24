@@ -1,7 +1,7 @@
 // Migration ponctuelle : données financières de l'ancienne appli (users/{uid}) vers v2/users/{uid}/finances/legacy.
 // Exception à la règle "seul donnees.js touche Firebase" : ce fichier est temporaire, à retirer une fois la migration faite.
-import { el, vider, bouton, enTete, euros, etatErreur } from './ui.js?v=7';
-import { RACINE_V2 } from './config.js?v=7';
+import { el, vider, bouton, enTete, euros, etatErreur } from './ui.js?v=8';
+import { RACINE_V2 } from './config.js?v=8';
 
 /* global firebase */
 

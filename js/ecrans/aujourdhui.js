@@ -1,11 +1,11 @@
 // Écran Aujourd'hui : mission en cours, liste du jour, relances dues, Inbox.
-import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, dateLongue, fenetre, libelleEcheance, debutJour } from '../ui.js?v=7';
-import { ecouter, ecouterMission, creer, modifier, supprimerInbox, demarrerMission, terminerMission, abandonnerMission } from '../donnees.js?v=7';
-import { QUADRANTS, LIMITE_LISTE_DU_JOUR } from '../constantes.js?v=7';
-import { ouvrir as ouvrirCapture } from './capture.js?v=7';
-import { ouvrirFormulaireTache } from './taches.js?v=7';
-import { selectionner as selectionnerClient } from './clients.js?v=7';
-import { allerA } from '../navigation.js?v=7';
+import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, dateLongue, fenetre, libelleEcheance, debutJour } from '../ui.js?v=8';
+import { ecouter, ecouterMission, creer, modifier, supprimerInbox, demarrerMission, terminerMission, abandonnerMission } from '../donnees.js?v=8';
+import { QUADRANTS, LIMITE_LISTE_DU_JOUR } from '../constantes.js?v=8';
+import { ouvrir as ouvrirCapture } from './capture.js?v=8';
+import { ouvrirFormulaireTache } from './taches.js?v=8';
+import { selectionner as selectionnerClient } from './clients.js?v=8';
+import { allerA } from '../navigation.js?v=8';
 
 const fmtHeure = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const UN_JOUR = 24 * 3600 * 1000;
