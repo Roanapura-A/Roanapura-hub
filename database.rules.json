@@ -119,6 +119,23 @@
                 "$nid": {
                   ".validate": "newData.hasChildren(['texte', 'auteur', 'createdAt'])"
                 }
+              },
+              "contrats": {
+                "$cid": {
+                  ".validate": "newData.hasChildren(['dateDebut', 'lien'])",
+                  "dateDebut": {
+                    ".validate": "newData.isNumber()"
+                  },
+                  "dateFin": {
+                    ".validate": "newData.isNumber() && newData.val() >= newData.parent().child('dateDebut').val()"
+                  },
+                  "lien": {
+                    ".validate": "newData.isString() && newData.val().matches(/^https?:\\/\\//) && newData.val().length <= 2000"
+                  },
+                  "libelle": {
+                    ".validate": "newData.isString() && newData.val().length <= 200"
+                  }
+                }
               }
             }
           }

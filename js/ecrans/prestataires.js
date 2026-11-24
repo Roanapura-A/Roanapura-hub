@@ -1,8 +1,8 @@
 // Écran Prestataires : tableau + fiche (statut, onglets Factures et Notes).
-import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, dateCourte, lienSur, euros } from '../ui.js?v=9';
-import { ecouter, creer, modifier, ajouterFacture, supprimerFacture, ajouterNotePrestataire, supprimerPrestataire } from '../donnees.js?v=9';
-import { STATUTS_PRESTATAIRE, libelle } from '../constantes.js?v=9';
-import { icone } from '../icones.js?v=9';
+import { el, vider, bouton, pastille, enTete, etatVide, etatChargement, etatErreur, fenetre, champ, versMs, versChamp, dateCourte, lienSur, euros } from '../ui.js?v=10';
+import { ecouter, creer, modifier, ajouterFacture, supprimerFacture, ajouterContrat, supprimerContrat, ajouterNotePrestataire, supprimerPrestataire } from '../donnees.js?v=10';
+import { STATUTS_PRESTATAIRE, libelle } from '../constantes.js?v=10';
+import { icone } from '../icones.js?v=10';
 
 const FILTRES = [
   { id: 'tous', label: 'Tous', garde: () => true },
@@ -93,6 +93,7 @@ function fiche(p, rendre) {
 
   const onglets = el('div', { class: 'onglets', role: 'tablist' }, [
     ['factures', `Factures (${liste(p.factures).length})`],
+    ['contrats', `Contrats (${liste(p.contrats).length})`],
     ['notes', `Notes (${liste(p.notes).length})`],
   ].map(([id, t]) => el('button', { type: 'button', role: 'tab', class: 'onglet', 'aria-selected': String(onglet === id), texte: t, onclick: () => { onglet = id; rendre(); } })));
 
@@ -105,7 +106,7 @@ function fiche(p, rendre) {
       segStatut,
     ]),
     onglets,
-    onglet === 'factures' ? panneauFactures(p, signaler) : panneauNotes(p, signaler),
+    onglet === 'factures' ? panneauFactures(p, signaler) : onglet === 'contrats' ? panneauContrats(p, signaler) : panneauNotes(p, signaler),
     erreur,
     el('div', { class: 'fiche-bas' }, [
       bouton('Modifier', { onclick: () => ouvrirFormulaire(p) }),
@@ -136,6 +137,62 @@ function panneauFactures(p, signaler) {
       ]);
     }) : [el('p', { class: 'note-bas', texte: 'Aucune facture.' })]),
   ]);
+}
+
+function panneauContrats(p, signaler) {
+  const contrats = liste(p.contrats).sort((a, b) => (b.dateDebut || 0) - (a.dateDebut || 0));
+  const maintenant = Date.now();
+  return el('div', { class: 'bloc-fiche', role: 'tabpanel' }, [
+    el('div', { class: 'carte-entete' }, [
+      el('span', { class: 'texte-2', texte: '' }),
+      bouton('+ Contrat', { class: 'btn btn-secondaire btn-mini', onclick: () => ouvrirFormulaireContrat(p) }),
+    ]),
+    ...(contrats.length ? contrats.map((c) => {
+      const url = lienSur(c.lien);
+      const enCours = c.dateDebut <= maintenant && (!c.dateFin || c.dateFin >= maintenant);
+      const periode = c.dateFin ? `${dateCourte(c.dateDebut)} → ${dateCourte(c.dateFin)}` : `Depuis le ${dateCourte(c.dateDebut)}`;
+      return el('div', { class: 'facture' }, [
+        el('div', { class: 'facture-texte' }, [
+          el('span', { class: 'facture-libelle', texte: c.libelle || 'Contrat' }),
+          el('span', { class: 'texte-3', texte: periode }),
+        ]),
+        el('div', { class: 'tache-meta' }, [
+          enCours ? pastille('En vigueur', { or: true }) : pastille(c.dateDebut > maintenant ? 'À venir' : 'Terminé'),
+          url ? el('a', { class: 'lien-fiche', href: url, target: '_blank', rel: 'noopener noreferrer' }, [icone('lien', 16), 'Ouvrir']) : el('span', { class: 'texte-3', texte: 'Lien invalide' }),
+          el('button', { type: 'button', class: 'btn btn-discret btn-mini', 'aria-label': `Retirer le contrat ${c.libelle || ''}`, texte: 'Retirer', onclick: () => supprimerContrat(p.id, c.id).catch(signaler) }),
+        ]),
+      ]);
+    }) : [el('p', { class: 'note-bas', texte: 'Aucun contrat.' })]),
+  ]);
+}
+
+function ouvrirFormulaireContrat(p) {
+  const lien = el('input', { class: 'champ', type: 'url', placeholder: 'https://' });
+  const debut = el('input', { class: 'champ', type: 'date', value: versChamp(Date.now()) });
+  const fin = el('input', { class: 'champ', type: 'date' });
+  const lib = el('input', { class: 'champ', type: 'text', maxlength: '200', placeholder: 'Ex : Contrat de prospection' });
+  const erreur = el('p', { class: 'form-erreur', role: 'alert' });
+  erreur.hidden = true;
+  const ok = bouton('Ajouter', { variante: 'principal' });
+  const annuler = bouton('Annuler');
+  const { fermer } = fenetre(`Contrat avec ${p.nom}`, el('div', { class: 'formulaire' }, [
+    champ('Lien vers le contrat', lien),
+    el('div', { class: 'groupes-ligne' }, [champ('Début', debut), champ('Fin (facultatif)', fin)]),
+    champ('Libellé', lib),
+    erreur,
+  ]), [annuler, ok]);
+  annuler.addEventListener('click', fermer);
+  lien.focus();
+  ok.addEventListener('click', async () => {
+    erreur.hidden = true;
+    if (!lienSur(lien.value)) { erreur.textContent = 'Le lien doit commencer par https://'; erreur.hidden = false; return; }
+    if (!debut.value) { erreur.textContent = 'La date de début est obligatoire.'; erreur.hidden = false; return; }
+    ok.disabled = true;
+    try {
+      await ajouterContrat(p.id, { libelle: lib.value.trim(), dateDebut: versMs(debut.value), dateFin: versMs(fin.value), lien: lien.value });
+      fermer();
+    } catch (e) { erreur.textContent = e.message; erreur.hidden = false; ok.disabled = false; }
+  });
 }
 
 function panneauNotes(p, signaler) {
@@ -217,14 +274,15 @@ function ouvrirFormulaire(p) {
 function confirmerSuppression(p) {
   const nbF = liste(p.factures).length;
   const nbN = liste(p.notes).length;
+  const nbC = liste(p.contrats).length;
   const saisie = el('input', { class: 'champ', type: 'text', autocomplete: 'off', placeholder: p.nom });
   const erreur = el('p', { class: 'form-erreur', role: 'alert' });
   erreur.hidden = true;
   const supprimer = bouton('Supprimer définitivement', { class: 'btn btn-danger-plein', disabled: true });
   const annuler = bouton('Annuler', { variante: 'principal' });
-  const details = [nbF ? `${nbF} facture${nbF > 1 ? 's' : ''}` : null, nbN ? `${nbN} note${nbN > 1 ? 's' : ''}` : null].filter(Boolean).join(' et ');
+  const details = [nbF ? `${nbF} facture${nbF > 1 ? 's' : ''}` : null, nbC ? `${nbC} contrat${nbC > 1 ? 's' : ''}` : null, nbN ? `${nbN} note${nbN > 1 ? 's' : ''}` : null].filter(Boolean).join(', ');
   const { fermer } = fenetre('Supprimer le prestataire ?', el('div', { class: 'formulaire' }, [
-    el('p', { class: 'sans-marge', texte: `« ${p.nom} » sera supprimé définitivement${details ? `, avec ses ${details}` : ''}. Les fichiers de facture eux-mêmes ne sont pas touchés.` }),
+    el('p', { class: 'sans-marge', texte: `« ${p.nom} » sera supprimé définitivement${details ? `, avec ses ${details}` : ''}. Les fichiers eux-mêmes (factures, contrats) ne sont pas touchés.` }),
     el('p', { class: 'texte-2 sans-marge', texte: 'Pour le garder sans le suivre, passe-le plutôt en Arrêté.' }),
     champ('Tape le nom pour confirmer', saisie),
     erreur,

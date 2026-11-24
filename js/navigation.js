@@ -2,12 +2,12 @@
 // Chaque écran exporte afficher(conteneur) qui peut renvoyer une fonction de nettoyage
 // (désabonnement des écouteurs Firebase quand on quitte l'écran).
 
-import { ECRANS } from './constantes.js?v=9';
-import * as aujourdhui from './ecrans/aujourdhui.js?v=9';
-import * as taches from './ecrans/taches.js?v=9';
-import * as clients from './ecrans/clients.js?v=9';
-import * as prestataires from './ecrans/prestataires.js?v=9';
-import * as migration from './migration.js?v=9';
+import { ECRANS } from './constantes.js?v=10';
+import * as aujourdhui from './ecrans/aujourdhui.js?v=10';
+import * as taches from './ecrans/taches.js?v=10';
+import * as clients from './ecrans/clients.js?v=10';
+import * as prestataires from './ecrans/prestataires.js?v=10';
+import * as migration from './migration.js?v=10';
 
 const MODULES = { aujourdhui, taches, clients, prestataires, migration }; // migration : route cachée #migration, temporaire
 const PAR_DEFAUT = 'aujourdhui';

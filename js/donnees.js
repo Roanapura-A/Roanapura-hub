@@ -1,8 +1,8 @@
 // SEULE couche qui touche à firebase.database(). Les écrans passent par ici.
 // Toutes les données V2 vivent sous v2/users/{uid}/. Écritures ciblées uniquement (jamais de set sur une collection).
 
-import { firebaseConfig, RACINE_V2 } from './config.js?v=9';
-import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, STATUTS_PRESTATAIRE, ids } from './constantes.js?v=9';
+import { firebaseConfig, RACINE_V2 } from './config.js?v=10';
+import { STATUTS_CLIENT, TYPES_CLIENT, STATUTS_TACHE, QUADRANTS, TYPES_NOTE, SOURCES_INBOX, STATUTS_PRESTATAIRE, ids } from './constantes.js?v=10';
 
 /* global firebase */
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -226,6 +226,23 @@ export async function ajouterFacture(prestataireId, { date, libelle, montant, li
 
 export async function supprimerFacture(prestataireId, factureId) {
   try { await db.ref(chemin('prestataires', prestataireId, 'factures', factureId)).remove(); } catch (e) { throw traduire(e); }
+}
+
+export async function ajouterContrat(prestataireId, { libelle, dateDebut, dateFin, lien }) {
+  if (!prestataireId) throw new ErreurDonnees('Prestataire manquant.');
+  if (typeof dateDebut !== 'number') throw new ErreurDonnees('La date de début est obligatoire.');
+  if (dateFin !== null && typeof dateFin !== 'number') throw new ErreurDonnees('Date de fin invalide.');
+  if (dateFin !== null && dateFin < dateDebut) throw new ErreurDonnees('La date de fin est avant la date de début.');
+  if (!lienHttps(lien)) throw new ErreurDonnees('Le lien doit commencer par https://');
+  if (libelle && libelle.length > 200) throw new ErreurDonnees('Libellé trop long.');
+  const ref = db.ref(chemin('prestataires', prestataireId, 'contrats')).push();
+  try {
+    await ref.set({ libelle: libelle || null, dateDebut, dateFin, lien: lien.trim(), createdAt: HORODATAGE });
+  } catch (e) { throw traduire(e); }
+}
+
+export async function supprimerContrat(prestataireId, contratId) {
+  try { await db.ref(chemin('prestataires', prestataireId, 'contrats', contratId)).remove(); } catch (e) { throw traduire(e); }
 }
 
 export async function ajouterNotePrestataire(prestataireId, texteNote) {
